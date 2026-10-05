@@ -103,7 +103,7 @@ const Navbar = ({ webSettings }) => {
     <>
       <header className="fixed top-2.5 sm:top-4 left-0 right-0 z-50 px-3 sm:px-6 pointer-events-none">
         {/* Floating Glossy Glass Capsule */}
-        <div className="max-w-5xl mx-auto glass-navbar-glossy rounded-full h-13 sm:h-[58px] px-3 sm:px-5 flex items-center justify-between gap-3 pointer-events-auto transition-all duration-300">
+        <div className="max-w-5xl mx-auto glass-navbar-glossy rounded-full h-[52px] sm:h-[58px] px-3 sm:px-5 flex items-center justify-between gap-3 pointer-events-auto transition-all duration-300">
           
           {/* Left: Mobile Menu Trigger + Brand Identity */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">

@@ -29,16 +29,44 @@ apiClient.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-// Response interceptor for clear error handling
+// Response interceptor: a 401 on an authenticated request means the session
+// is no longer valid, so tell AuthContext to sign out.
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && error.config?.headers?.Authorization) {
       console.warn('[API] Authorization expired or invalid token.');
+      window.dispatchEvent(new Event('auth:expired'));
     }
     return Promise.reject(error);
   }
 );
+
+// Pulls a readable message out of an axios error
+export const getErrorMessage = (err, fallback = 'Something went wrong. Please try again.') => {
+  if (!err?.response) return 'Cannot reach the server. Check your connection and try again.';
+  return err.response?.data?.message || fallback;
+};
+
+// AUTH API
+export const authAPI = {
+  login: async (email, password) => {
+    const res = await apiClient.post('/auth/login', { email, password });
+    return res.data;
+  }
+};
+
+// UPLOAD API
+export const uploadAPI = {
+  image: async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const res = await apiClient.post('/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return res.data;
+  }
+};
 
 // BOOKINGS API
 export const bookingsAPI = {
@@ -82,8 +110,17 @@ export const servicesAPI = {
     const res = await apiClient.get('/services');
     return res.data;
   },
+  // Admin view: includes hidden services so they can be shown again
+  getAllIncludingHidden: async () => {
+    const res = await apiClient.get('/services', { params: { includeHidden: 'true' } });
+    return res.data;
+  },
   getBySlug: async (slug) => {
-    const res = await apiClient.get(`/services/${slug}`);
+    const res = await apiClient.get(`/services/slug/${slug}`);
+    return res.data;
+  },
+  reorder: async (orderedIds) => {
+    const res = await apiClient.put('/services/reorder/list', { orderedIds });
     return res.data;
   },
   create: async (data) => {
@@ -126,6 +163,27 @@ export const doctorsAPI = {
 
 // SETTINGS API
 export const settingsAPI = {
+  // All public settings keyed by name: { web, contact, homepage, ... }
+  getAll: async () => {
+    const res = await apiClient.get('/settings');
+    return res.data;
+  },
+  update: async (key, value) => {
+    const res = await apiClient.put(`/settings/${key}`, { value });
+    return res.data;
+  },
+  getEmailConfig: async () => {
+    const res = await apiClient.get('/settings/admin/email-config');
+    return res.data;
+  },
+  getCloudinaryConfig: async () => {
+    const res = await apiClient.get('/settings/admin/cloudinary-config');
+    return res.data;
+  },
+  sendTestEmail: async (targetEmail) => {
+    const res = await apiClient.post('/settings/admin/test-email', { targetEmail });
+    return res.data;
+  },
   getWebSettings: async () => {
     const res = await apiClient.get('/settings/web');
     return res.data;
@@ -144,20 +202,30 @@ export const settingsAPI = {
   }
 };
 
-// TESTIMONIALS API
-export const testimonialsAPI = {
+// Basic CRUD helpers for simple collections
+const crud = (path) => ({
   getAll: async () => {
-    const res = await apiClient.get('/testimonials');
+    const res = await apiClient.get(path);
+    return res.data;
+  },
+  create: async (data) => {
+    const res = await apiClient.post(path, data);
+    return res.data;
+  },
+  update: async (id, data) => {
+    const res = await apiClient.put(`${path}/${id}`, data);
+    return res.data;
+  },
+  delete: async (id) => {
+    const res = await apiClient.delete(`${path}/${id}`);
     return res.data;
   }
-};
+});
+
+// TESTIMONIALS API
+export const testimonialsAPI = crud('/testimonials');
 
 // FAQS API
-export const faqsAPI = {
-  getAll: async () => {
-    const res = await apiClient.get('/faqs');
-    return res.data;
-  }
-};
+export const faqsAPI = crud('/faqs');
 
 export default apiClient;

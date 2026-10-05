@@ -98,6 +98,31 @@ router.post('/', protect, async (req, res) => {
   }
 });
 
+// @desc    Reorder services (drag & drop)
+// @route   PUT /api/services/reorder/list
+// @access  Private/Admin
+// Must be registered before PUT /:id, otherwise "reorder" is matched as an id.
+router.put('/reorder/list', protect, async (req, res) => {
+  const { orderedIds } = req.body;
+
+  try {
+    if (!Array.isArray(orderedIds)) {
+      return res.status(400).json({ success: false, message: 'orderedIds array is required' });
+    }
+
+    // Update displayOrder for each service ID
+    for (let index = 0; index < orderedIds.length; index++) {
+      const id = orderedIds[index];
+      await dbHelper.findByIdAndUpdate(Service, id, { displayOrder: index });
+    }
+
+    res.json({ success: true, message: 'Services reordered successfully' });
+  } catch (error) {
+    console.error('Error reordering services:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 // @desc    Update a service
 // @route   PUT /api/services/:id
 // @access  Private/Admin
@@ -155,30 +180,6 @@ router.delete('/:id', protect, async (req, res) => {
     res.json({ success: true, message: 'Service removed successfully' });
   } catch (error) {
     console.error('Error deleting service:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
-
-// @desc    Reorder services (drag & drop)
-// @route   PUT /api/services/reorder/list
-// @access  Private/Admin
-router.put('/reorder/list', protect, async (req, res) => {
-  const { orderedIds } = req.body;
-
-  try {
-    if (!Array.isArray(orderedIds)) {
-      return res.status(400).json({ success: false, message: 'orderedIds array is required' });
-    }
-
-    // Update displayOrder for each service ID
-    for (let index = 0; index < orderedIds.length; index++) {
-      const id = orderedIds[index];
-      await dbHelper.findByIdAndUpdate(Service, id, { displayOrder: index });
-    }
-
-    res.json({ success: true, message: 'Services reordered successfully' });
-  } catch (error) {
-    console.error('Error reordering services:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });

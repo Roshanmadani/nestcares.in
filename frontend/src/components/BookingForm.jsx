@@ -1,837 +1,675 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Calendar, Clock, User, Phone, Mail, MapPin, 
-  FileText, CheckCircle2, ArrowRight, ShieldCheck, HeartPulse, Sparkles,
-  AlertCircle, MessageSquare, Check, RefreshCw, Headphones, ArrowLeft,
-  Copy, Stethoscope, Activity, Heart, Shield, Award, Printer, CheckCheck
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  Stethoscope, Truck, HeartPulse, Activity, Microscope, UserCheck, Apple,
+  Zap, Sunrise, Sun, Moon, Check, ArrowRight, ArrowLeft, Loader2, AlertCircle,
+  MessageSquare, Copy, CheckCheck, PhoneCall, Pencil, Plus, ShieldCheck
 } from 'lucide-react';
-import { bookingsAPI } from '../services/api';
+import { bookingsAPI, getErrorMessage } from '../services/api';
 
+// Used when the API has no services (offline / first load)
 const DEFAULT_SERVICES = [
   {
     title: 'Doctor Consultation',
-    image: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=600',
-    badge: 'Home Visit',
-    icon: Stethoscope,
     sub: [
-      { name: 'Home Doctor Visit', desc: 'Senior MBBS / MD physician visits your home for full physical examination and diagnostics.' },
-      { name: 'Tele Consultation', desc: 'Audio / Video triage consultation with certified general physician.' },
-      { name: 'Specialist Doctor Visit', desc: 'Specialist physician visit (Cardiology, Neurology, Orthopedics, Pulmonology).' }
+      { name: 'Home Doctor Visit', desc: 'An MBBS / MD physician examines the patient at home.' },
+      { name: 'Tele Consultation', desc: 'Phone or video consultation with a physician.' },
+      { name: 'Specialist Doctor Visit', desc: 'Cardiology, neurology, orthopaedics or pulmonology.' }
     ]
   },
   {
     title: 'Ambulance Services',
-    image: 'https://images.unsplash.com/photo-1587745416684-47953f16f02f?auto=format&fit=crop&q=80&w=600',
-    badge: '24/7 Standby',
-    icon: Activity,
     sub: [
-      { name: 'Emergency Response Ambulance', desc: 'Basic Life Support (BLS) rapid dispatch ambulance with oxygen and paramedic.' },
-      { name: 'ICU Ventilator Ambulance', desc: 'Advanced Life Support (ALS) with ventilator, multipara monitor, and emergency clinician.' },
-      { name: 'Inter-City Patient Transport', desc: 'Long-distance patient transfer with continuous clinical monitoring.' }
+      { name: 'Emergency Response Ambulance', desc: 'Basic life support with oxygen and a paramedic.' },
+      { name: 'ICU Ventilator Ambulance', desc: 'Advanced life support with ventilator and monitor.' },
+      { name: 'Inter-City Patient Transport', desc: 'Long-distance transfer with monitoring.' }
     ]
   },
   {
     title: 'Nursing Services',
-    image: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&q=80&w=600',
-    badge: '12h / 24h Care',
-    icon: HeartPulse,
     sub: [
-      { name: 'General Nursing Care (12h / 24h Shift)', desc: 'Bedside nurse for vitals monitoring, patient hygiene, and daily medication logs.' },
-      { name: '24/7 Live-in Home Nursing', desc: 'Round-the-clock intensive clinical nursing care for critical recovery.' },
-      { name: 'Wound Dressing & Stitch Removal', desc: 'Aseptic dressing changes for surgical, diabetic, or trauma wounds.' },
-      { name: 'Bed Sore Care & Management', desc: 'Specialized sore dressings, positioning protocol, and air bed setup.' },
-      { name: 'Tracheostomy / Ryle\'s Tube Care', desc: 'Suctioning, cannula cleaning, and stoma site clinical care.' }
+      { name: 'General Nursing Care (12h / 24h Shift)', desc: 'Vitals, hygiene and medication at the bedside.' },
+      { name: '24/7 Live-in Home Nursing', desc: 'Round-the-clock nursing for critical recovery.' },
+      { name: 'Wound Dressing & Stitch Removal', desc: 'Surgical, diabetic or trauma wound care.' },
+      { name: 'Bed Sore Care & Management', desc: 'Dressings, positioning and air bed setup.' },
+      { name: "Tracheostomy / Ryle's Tube Care", desc: 'Suctioning, cannula and stoma care.' }
     ]
   },
   {
     title: 'ICU Setup at Home',
-    image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=600',
-    badge: 'Hospital-Grade',
-    icon: ShieldCheck,
     sub: [
-      { name: 'Complete Home ICU Setup', desc: 'Hospital bed, ventilator, monitor, suction, oxygen, and 24/7 ICU nurse.' },
-      { name: 'ICU Hospital Bed Rental', desc: 'Motorized 5-function / 3-function hospital bed with remote controls.' },
-      { name: 'Multipara Patient Monitor', desc: '5-para monitor for ECG, SpO2, NIBP, respiration, and temperature.' },
-      { name: 'BiPAP / CPAP Machine Setup', desc: 'Non-invasive ventilator setup with mask fitting and pressure titration.' },
-      { name: 'Oxygen Concentrator (10L / 5L)', desc: 'Medical-grade continuous oxygen flow generator.' }
+      { name: 'Complete Home ICU Setup', desc: 'Bed, ventilator, monitor, oxygen and ICU nurse.' },
+      { name: 'ICU Hospital Bed Rental', desc: 'Motorised hospital bed with remote.' },
+      { name: 'Multipara Patient Monitor', desc: 'ECG, SpO2, BP, respiration, temperature.' },
+      { name: 'BiPAP / CPAP Machine Setup', desc: 'Non-invasive ventilation with mask fitting.' },
+      { name: 'Oxygen Concentrator (10L / 5L)', desc: 'Continuous medical-grade oxygen.' }
     ]
   },
   {
     title: 'Laboratory Services',
-    image: 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&q=80&w=600',
-    badge: 'Doorstep Sample',
-    icon: Shield,
     sub: [
-      { name: 'Home Blood Sample Collection', desc: 'Certified phlebotomist collects blood samples right at your doorstep.' },
-      { name: 'Complete Health Package (60+ Tests)', desc: 'CBC, Lipid, LFT, KFT, Thyroid, Blood Sugar, and Urine routine.' },
-      { name: 'Cardiac & Diabetic Profile', desc: 'HbA1c, Fasting Sugar, Lipid Panel, Serum Creatinine, and Electrolytes.' }
+      { name: 'Home Blood Sample Collection', desc: 'A phlebotomist collects samples at home.' },
+      { name: 'Complete Health Package (60+ Tests)', desc: 'CBC, lipids, liver, kidney, thyroid, sugar.' },
+      { name: 'Cardiac & Diabetic Profile', desc: 'HbA1c, fasting sugar, lipids, creatinine.' }
     ]
   },
   {
     title: 'Physiotherapy',
-    image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=600',
-    badge: 'Mobility Rehab',
-    icon: Heart,
     sub: [
-      { name: 'Home Physiotherapy Session', desc: 'Certified physiotherapist delivers 45-min targeted mobility therapy.' },
-      { name: 'Post-Surgery Joint Rehabilitation', desc: 'Knee / hip replacement post-op mobility and gait recovery.' },
-      { name: 'Neurological & Stroke Recovery', desc: 'Neuro-rehabilitation for stroke, Parkinson\'s, or paralysis recovery.' }
+      { name: 'Home Physiotherapy Session', desc: '45-minute session with a physiotherapist.' },
+      { name: 'Post-Surgery Joint Rehabilitation', desc: 'Knee / hip replacement recovery.' },
+      { name: 'Neurological & Stroke Recovery', desc: "Stroke, Parkinson's or paralysis rehab." }
     ]
   },
   {
     title: 'Dietician Advisory',
-    image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=600',
-    badge: 'Nutrition Plan',
-    icon: Award,
     sub: [
-      { name: 'Personalized Clinical Diet Plan', desc: 'Custom nutrition chart formulated based on medical reports & lifestyle.' },
-      { name: 'Diabetes & Renal Diet Consultation', desc: 'Specialized glycemic-control and renal-friendly nutrition counseling.' }
+      { name: 'Personalized Clinical Diet Plan', desc: 'Nutrition chart based on reports and lifestyle.' },
+      { name: 'Diabetes & Renal Diet Consultation', desc: 'Sugar-control and kidney-friendly diets.' }
     ]
   }
 ];
 
-const NIZAMABAD_LOCALITIES = [
-  'Chandra Shekar Colony', 'Pragathi Nagar', 'Subhash Nagar', 
-  'Khaleelwadi', 'Vinayak Nagar', 'Armoor Road', 'Bodhan Road', 'Kanteshwar'
+// Pick an icon from words in the service title
+const ICON_RULES = [
+  [/ambulance|transport/i, Truck],
+  [/nurs/i, HeartPulse],
+  [/icu|equipment|oxygen/i, Activity],
+  [/lab|test|diagnos/i, Microscope],
+  [/physio|rehab/i, UserCheck],
+  [/diet|nutrition/i, Apple],
 ];
+const iconFor = (title = '') => (ICON_RULES.find(([re]) => re.test(title)) || [null, Stethoscope])[1];
+
+// Match a title coming from another page ("Professional Home Nursing") to a booking category ("Nursing Services")
+const STOP_WORDS = new Set(['home', 'services', 'service', 'professional', 'the', 'and', 'at', 'setup']);
+const keywords = (s = '') => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
+const findCategory = (list, title) => {
+  if (!title) return null;
+  const exact = list.find(s => s.title.toLowerCase() === title.toLowerCase());
+  if (exact) return exact;
+  const want = keywords(title).map(w => w.slice(0, 5));
+  let best = null;
+  let bestScore = 0;
+  list.forEach(s => {
+    const have = keywords(s.title).map(w => w.slice(0, 5));
+    const score = want.filter(w => have.includes(w)).length;
+    if (score > bestScore) { best = s; bestScore = score; }
+  });
+  return best;
+};
 
 const TIME_SLOTS = [
-  { id: 'Immediate', label: 'Immediate Priority', time: 'Within 15-30 Mins', icon: '⚡', highlight: true },
-  { id: 'Morning (08:00 AM - 12:00 PM)', label: 'Morning Slot', time: '08:00 AM - 12:00 PM', icon: '🌅' },
-  { id: 'Afternoon (12:00 PM - 04:00 PM)', label: 'Afternoon Slot', time: '12:00 PM - 04:00 PM', icon: '☀️' },
-  { id: 'Evening (04:00 PM - 08:00 PM)', label: 'Evening Slot', time: '04:00 PM - 08:00 PM', icon: '🌙' }
+  { id: 'Immediate (within 30 mins)', label: 'Right now', time: 'Within 30 mins', icon: Zap },
+  { id: 'Morning (08:00 AM - 12:00 PM)', label: 'Morning', time: '8 AM – 12 PM', icon: Sunrise },
+  { id: 'Afternoon (12:00 PM - 04:00 PM)', label: 'Afternoon', time: '12 – 4 PM', icon: Sun },
+  { id: 'Evening (04:00 PM - 08:00 PM)', label: 'Evening', time: '4 – 8 PM', icon: Moon }
 ];
 
-const BookingForm = ({ 
-  services = [], 
-  preSelectedCategory = '', 
+const AREAS = ['Subhash Nagar', 'Pragathi Nagar', 'Kanteshwar', 'Vinayak Nagar', 'Khaleelwadi', 'Chandra Shekar Colony', 'Armoor Road', 'Bodhan Road'];
+
+const STEPS = ['Service', 'When & where', 'Your details'];
+
+// Local YYYY-MM-DD (toISOString would give the UTC date, which is wrong early in the Indian morning)
+const localDate = (offsetDays = 0) => {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+const prettyDate = (value) => {
+  if (value === localDate(0)) return 'Today';
+  if (value === localDate(1)) return 'Tomorrow';
+  const d = new Date(`${value}T00:00:00`);
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+};
+
+const HELPLINE = '+91 92488 49388';
+const WHATSAPP = '919248849388';
+
+const cx = (...c) => c.filter(Boolean).join(' ');
+
+const StepHeading = ({ title, desc }) => (
+  <div className="mb-5">
+    <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">{title}</h2>
+    {desc && <p className="text-[14px] text-slate-500 mt-1">{desc}</p>}
+  </div>
+);
+
+const Label = ({ children, htmlFor }) => (
+  <label htmlFor={htmlFor} className="block text-[14px] font-bold text-slate-900 mb-2">{children}</label>
+);
+
+const FieldError = ({ children }) => children ? (
+  <p className="mt-1.5 text-[13px] font-semibold text-rose-600 flex items-center gap-1.5"><AlertCircle className="w-3.5 h-3.5" />{children}</p>
+) : null;
+
+const inputClass = (error) => cx(
+  'w-full rounded-2xl bg-white border px-4 text-[16px] text-slate-950 placeholder:text-slate-400 outline-none transition focus:ring-4',
+  error ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/10' : 'border-slate-200 focus:border-slate-900 focus:ring-slate-900/5'
+);
+
+const BookingForm = ({
+  services = [],
+  preSelectedCategory = '',
   preSelectedSubService = '',
   preSelectedMobile = '',
   preSelectedAddress = '',
-  onSuccess = null 
+  onSuccess = null
 }) => {
-  const activeServicesList = (services && Array.isArray(services) && services.length > 0)
-    ? services.filter(s => s && s.active !== false).map(s => ({
-        title: s.title,
-        image: s.bannerImage || s.galleryImages?.[0] || 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=600',
-        badge: s.badge || 'Available',
-        icon: Stethoscope,
-        sub: s.subServices && s.subServices.length > 0 
-          ? s.subServices.map(sub => typeof sub === 'string' ? { name: sub, desc: '' } : { name: sub.name, desc: sub.description || '' })
-          : [{ name: s.title, desc: s.shortDescription || '' }]
-      }))
-    : DEFAULT_SERVICES;
+  const categories = useMemo(() => {
+    const fromApi = (Array.isArray(services) ? services : [])
+      .filter(s => s && s.active !== false && s.bookable !== false)
+      .map(s => {
+        const subs = (s.subServices || [])
+          .map(sub => (typeof sub === 'string' ? { name: sub } : sub))
+          .filter(sub => sub?.name && sub.active !== false && sub.bookable !== false)
+          .map(sub => ({ name: sub.name, desc: sub.description || sub.desc || '' }));
+        return { title: s.title, sub: subs.length ? subs : [{ name: s.title, desc: s.shortDescription || '' }] };
+      });
+    return fromApi.length ? fromApi : DEFAULT_SERVICES;
+  }, [services]);
+
+  const initialCategory = findCategory(categories, preSelectedCategory);
 
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    name: '',
-    mobile: preSelectedMobile || '',
-    email: '',
+  const [form, setForm] = useState(() => ({
+    serviceName: initialCategory?.title || '',
+    subServiceName: (initialCategory && (initialCategory.sub.find(s => s.name === preSelectedSubService)?.name || (initialCategory.sub.length === 1 ? initialCategory.sub[0].name : ''))) || '',
+    preferredDate: localDate(0),
+    preferredTime: TIME_SLOTS[0].id,
     address: preSelectedAddress || '',
-    serviceName: preSelectedCategory || activeServicesList[0]?.title || 'Doctor Consultation',
-    subServiceName: preSelectedSubService || activeServicesList[0]?.sub?.[0]?.name || 'Home Doctor Visit',
-    preferredDate: new Date().toISOString().split('T')[0],
-    preferredTime: 'Immediate',
+    name: '',
+    mobile: (preSelectedMobile || '').replace(/\D/g, '').slice(-10),
+    email: '',
     notes: ''
+  }));
+  const [errors, setErrors] = useState({});
+  const [showOtherDate, setShowOtherDate] = useState(false);
+  const [showExtras, setShowExtras] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [confirmed, setConfirmed] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const topRef = useRef(null);
+  const treatmentsRef = useRef(null);
+
+  // Apply a pre-selection that arrives after the first render (services loading late)
+  useEffect(() => {
+    if (form.serviceName) return;
+    const match = findCategory(categories, preSelectedCategory);
+    if (match) {
+      setForm(f => ({
+        ...f,
+        serviceName: match.title,
+        subServiceName: match.sub.find(s => s.name === preSelectedSubService)?.name || (match.sub.length === 1 ? match.sub[0].name : '')
+      }));
+    }
+  }, [categories, preSelectedCategory, preSelectedSubService]);
+
+  const category = categories.find(c => c.title === form.serviceName);
+
+  const update = (k, v) => {
+    setForm(f => ({ ...f, [k]: v }));
+    if (errors[k]) setErrors(e => ({ ...e, [k]: undefined }));
+  };
+
+  const chooseCategory = (c) => {
+    setForm(f => ({ ...f, serviceName: c.title, subServiceName: c.sub.length === 1 ? c.sub[0].name : '' }));
+    setErrors({});
+    // On phones, bring the treatment list into view
+    setTimeout(() => treatmentsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+  };
+
+  const addArea = (area) => {
+    const current = form.address.trim();
+    if (current.toLowerCase().includes(area.toLowerCase())) return;
+    update('address', current ? `${current.replace(/,?\s*Nizamabad$/i, '')}, ${area}, Nizamabad` : `${area}, Nizamabad`);
+  };
+
+  const validate = (s) => {
+    const e = {};
+    if (s === 1) {
+      if (!form.serviceName) e.serviceName = 'Choose a service';
+      else if (!form.subServiceName) e.subServiceName = 'Choose what you need';
+    }
+    if (s === 2) {
+      if (!form.preferredDate) e.preferredDate = 'Choose a date';
+      if (form.address.trim().length < 8) e.address = 'Enter the full address with house number and area';
+    }
+    if (s === 3) {
+      if (form.name.trim().length < 2) e.name = "Enter the patient's name";
+      if (!/^[6-9]\d{9}$/.test(form.mobile)) e.mobile = 'Enter a valid 10-digit mobile number';
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const goTo = (n) => {
+    setStep(n);
+    setSubmitError('');
+    topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const next = () => { if (validate(step)) goTo(step + 1); };
+
+  const payload = () => ({
+    name: form.name.trim(),
+    mobile: form.mobile,
+    email: form.email.trim(),
+    address: form.address.trim(),
+    serviceName: form.serviceName,
+    subServiceName: form.subServiceName,
+    preferredDate: form.preferredDate,
+    preferredTime: form.preferredTime,
+    notes: form.notes.trim()
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [confirmedBooking, setConfirmedBooking] = useState(null);
-  const [copiedId, setCopiedId] = useState(false);
-
-  useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      mobile: preSelectedMobile || prev.mobile,
-      address: preSelectedAddress || prev.address
-    }));
-  }, [preSelectedMobile, preSelectedAddress]);
-
-  useEffect(() => {
-    if (preSelectedCategory && activeServicesList.length > 0) {
-      const matchCat = activeServicesList.find(s => s.title.toLowerCase() === preSelectedCategory.toLowerCase());
-      if (matchCat) {
-        setFormData(prev => ({
-          ...prev,
-          serviceName: matchCat.title,
-          subServiceName: preSelectedSubService || matchCat.sub[0]?.name || ''
-        }));
-      }
-    }
-  }, [preSelectedCategory, preSelectedSubService, activeServicesList]);
-
-  const selectedCategoryObj = activeServicesList.find(s => s.title === formData.serviceName) || activeServicesList[0] || DEFAULT_SERVICES[0];
-  const selectedSubServiceObj = selectedCategoryObj?.sub.find(sub => sub.name === formData.subServiceName) || selectedCategoryObj?.sub[0];
-
-  const handleCategoryChange = (catTitle) => {
-    const cat = activeServicesList.find(s => s.title === catTitle);
-    setFormData(prev => ({
-      ...prev,
-      serviceName: catTitle,
-      subServiceName: cat?.sub?.[0]?.name || ''
-    }));
-  };
-
-  const handleSubServiceChange = (subName) => {
-    setFormData(prev => ({ ...prev, subServiceName: subName }));
-  };
-
-  const handleDateQuickSelect = (daysAhead) => {
-    const d = new Date();
-    d.setDate(d.getDate() + daysAhead);
-    setFormData(prev => ({ ...prev, preferredDate: d.toISOString().split('T')[0] }));
-  };
-
-  const handleLocalityTag = (locality) => {
-    setFormData(prev => {
-      const current = prev.address.trim();
-      if (!current) return { ...prev, address: `${locality}, Nizamabad` };
-      if (current.includes(locality)) return prev;
-      return { ...prev, address: `${current}, ${locality}, Nizamabad` };
-    });
-  };
-
-  const validateStep1 = () => {
-    if (!formData.serviceName || !formData.subServiceName) {
-      setError('Please select a healthcare service and specific treatment.');
-      return false;
-    }
-    setError('');
-    return true;
-  };
-
-  const validateStep2 = () => {
-    if (!formData.preferredDate) {
-      setError('Please select an appointment date.');
-      return false;
-    }
-    if (!formData.address.trim()) {
-      setError('Please provide the patient address in Nizamabad.');
-      return false;
-    }
-    setError('');
-    return true;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (!formData.name.trim()) {
-      setError('Please enter the patient’s full name.');
-      return;
-    }
-    const cleanMobile = formData.mobile.replace(/\D/g, '');
-    if (cleanMobile.length < 10) {
-      setError('Please enter a valid 10-digit mobile number.');
-      return;
-    }
-    if (!formData.address.trim()) {
-      setError('Please provide the service delivery address in Nizamabad.');
-      return;
-    }
-
-    setLoading(true);
-
+  const submit = async (e) => {
+    e?.preventDefault();
+    if (step < 3) return next();
+    if (!validate(3)) return;
+    setSubmitting(true);
+    setSubmitError('');
     try {
-      const payload = {
-        name: formData.name.trim(),
-        mobile: formData.mobile.trim(),
-        email: formData.email.trim() || '',
-        address: formData.address.trim(),
-        serviceName: formData.serviceName,
-        subServiceName: formData.subServiceName,
-        preferredDate: formData.preferredDate,
-        preferredTime: formData.preferredTime,
-        notes: formData.notes.trim() || 'Booked via Nest Cares web portal v2.0'
-      };
-
-      const res = await bookingsAPI.createBooking(payload);
-      
-      const createdRecord = res.data?.data || res.data || {
-        bookingId: 'NEST-' + Math.floor(100 + Math.random() * 900),
-        ...payload
-      };
-
-      setConfirmedBooking(createdRecord);
-      if (onSuccess) onSuccess(createdRecord);
+      const res = await bookingsAPI.createBooking(payload());
+      const record = res?.data || payload();
+      setConfirmed(record);
+      onSuccess?.(record);
+      topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) {
-      console.warn('Backend offline or busy, using resilient fallback logger:', err);
-      const fallbackRecord = {
-        bookingId: 'NEST-' + Math.floor(100 + Math.random() * 900),
-        ...formData
-      };
-      setConfirmedBooking(fallbackRecord);
+      setSubmitError(getErrorMessage(err, 'We could not submit your booking.'));
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  const copyBookingId = (id) => {
-    navigator.clipboard.writeText(id);
-    setCopiedId(true);
-    setTimeout(() => setCopiedId(false), 3000);
+  const whatsappFallback = () => {
+    const p = payload();
+    const text = `Hello Nest Cares, I'd like to book:\n• Service: ${p.serviceName} — ${p.subServiceName}\n• When: ${prettyDate(p.preferredDate)}, ${p.preferredTime}\n• Patient: ${p.name}\n• Mobile: ${p.mobile}\n• Address: ${p.address}${p.notes ? `\n• Notes: ${p.notes}` : ''}`;
+    return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(text)}`;
   };
 
-  const resetForm = () => {
-    setConfirmedBooking(null);
-    setStep(1);
-    setFormData({
-      name: '',
-      mobile: '',
-      email: '',
-      address: '',
-      serviceName: activeServicesList[0]?.title || 'Doctor Consultation',
-      subServiceName: activeServicesList[0]?.sub?.[0]?.name || 'Home Doctor Visit',
-      preferredDate: new Date().toISOString().split('T')[0],
-      preferredTime: 'Immediate',
-      notes: ''
-    });
-  };
-
-  const stepTitles = [
-    { num: 1, label: 'Service & Treatment', short: 'Service' },
-    { num: 2, label: 'Schedule & Address', short: 'Schedule' },
-    { num: 3, label: 'Patient & Confirm', short: 'Confirm' }
-  ];
-
-  return (
-    <div className="bg-white rounded-3xl border border-slate-200/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)] overflow-hidden text-left font-sans transition-all">
-      
-      {/* 1. Header Progress Bar */}
-      <div className="bg-slate-50/80 border-b border-slate-200/80 p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-5">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-teal-50 text-teal-700 rounded-full text-[10px] font-mono font-bold uppercase tracking-widest border border-teal-200 mb-2.5">
-            <Sparkles className="w-3.5 h-3.5 text-teal-600" />
-            Direct Bedside Healthcare Triage
-          </div>
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
-            Book Home Medical Care
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Step {step} of 3: {stepTitles[step - 1]?.label} • Zero Advance Payment Required
-          </p>
+  // ---------- Success ----------
+  if (confirmed) {
+    const ref = confirmed.bookingId || confirmed._id;
+    return (
+      <div ref={topRef} className="scroll-mt-28 bg-white rounded-[1.75rem] border border-slate-200/80 shadow-[0_20px_50px_-20px_rgba(15,23,42,0.15)] p-6 sm:p-10 text-center">
+        <div className="mx-auto h-16 w-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <Check className="w-8 h-8 stroke-[3]" />
         </div>
+        <h2 className="mt-5 text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">Booking received</h2>
+        <p className="mt-2 text-[15px] text-slate-600 max-w-md mx-auto">
+          Our coordinator will call <strong className="text-slate-950">{confirmed.mobile}</strong> within 15 minutes to confirm the visit.
+        </p>
 
-        {/* 3 Step Interactive Stepper */}
-        <div className="flex items-center gap-3">
-          {stepTitles.map((s) => {
-            const isActive = step === s.num;
-            const isCompleted = step > s.num;
-            return (
-              <button
-                key={s.num}
-                type="button"
-                onClick={() => {
-                  if (isCompleted) setStep(s.num);
-                }}
-                disabled={!isCompleted && !isActive}
-                className={`flex items-center gap-2 px-3 py-2 rounded-2xl transition-all ${
-                  isActive
-                    ? 'bg-teal-700 text-white font-black shadow-md shadow-teal-700/20 scale-105'
-                    : isCompleted
-                      ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200 cursor-pointer hover:bg-teal-100'
-                      : 'bg-slate-100 text-slate-400 font-semibold border border-slate-200/80 cursor-not-allowed'
-                }`}
-              >
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
-                  isActive ? 'bg-white text-teal-800 font-black' : isCompleted ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-500'
-                }`}>
-                  {isCompleted ? <Check className="w-3 h-3 stroke-[3]" /> : s.num}
-                </div>
-                <span className="text-xs hidden sm:inline">{s.short}</span>
-              </button>
-            );
-          })}
+        {ref && (
+          <div className="mt-6 inline-flex items-center gap-3 rounded-2xl bg-slate-50 border border-slate-200 pl-4 pr-2 py-2">
+            <div className="text-left">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Booking ID</div>
+              <div className="font-mono font-bold text-slate-950">{ref}</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => { navigator.clipboard?.writeText(ref); setCopied(true); setTimeout(() => setCopied(false), 2500); }}
+              className="h-9 px-3 rounded-xl bg-white border border-slate-200 text-[13px] font-semibold flex items-center gap-1.5 cursor-pointer"
+            >
+              {copied ? <CheckCheck className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+              {copied ? 'Copied' : 'Copy'}
+            </button>
+          </div>
+        )}
+
+        <dl className="mt-6 max-w-sm mx-auto text-left text-[14px] divide-y divide-slate-100 border-y border-slate-100">
+          <div className="flex justify-between gap-4 py-2.5"><dt className="text-slate-500">Service</dt><dd className="font-semibold text-slate-950 text-right">{confirmed.subServiceName || confirmed.serviceName}</dd></div>
+          <div className="flex justify-between gap-4 py-2.5"><dt className="text-slate-500">When</dt><dd className="font-semibold text-slate-950 text-right">{prettyDate(confirmed.preferredDate)} · {TIME_SLOTS.find(t => t.id === confirmed.preferredTime)?.label || confirmed.preferredTime}</dd></div>
+          <div className="flex justify-between gap-4 py-2.5"><dt className="text-slate-500">Patient</dt><dd className="font-semibold text-slate-950 text-right">{confirmed.name}</dd></div>
+        </dl>
+
+        <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+          <a
+            href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hi Nest Cares, I just booked ${confirmed.serviceName}${ref ? ` (ID ${ref})` : ''} for ${confirmed.name}.`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="h-12 px-6 rounded-full bg-emerald-600 text-white font-bold text-[15px] flex items-center justify-center gap-2"
+          >
+            <MessageSquare className="w-4 h-4" /> Message us on WhatsApp
+          </a>
+          <Link to="/" className="h-12 px-6 rounded-full bg-slate-100 text-slate-900 font-bold text-[15px] flex items-center justify-center">
+            Back to home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const slot = TIME_SLOTS.find(t => t.id === form.preferredTime);
+  const isLast = step === 3;
+
+  // ---------- Form ----------
+  return (
+    <form onSubmit={submit} noValidate ref={topRef} className="scroll-mt-28">
+      {/* Progress */}
+      <div className="mb-5">
+        <div className="flex items-center justify-between text-[13px] font-semibold mb-2">
+          <span className="text-slate-950">Step {step} of 3 · {STEPS[step - 1]}</span>
+          <a href={`tel:${HELPLINE.replace(/\s/g, '')}`} className="text-slate-500 hover:text-slate-950 flex items-center gap-1.5">
+            <PhoneCall className="w-3.5 h-3.5" /> <span>Prefer to call?</span>
+          </a>
+        </div>
+        <div className="grid grid-cols-3 gap-1.5" aria-hidden="true">
+          {STEPS.map((_, i) => (
+            <div key={i} className={cx('h-1.5 rounded-full transition-colors', i < step ? 'bg-slate-950' : 'bg-slate-200')} />
+          ))}
         </div>
       </div>
 
-      {/* 2. Main Step Content Container */}
-      {!confirmedBooking ? (
-        <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
-          
-          <AnimatePresence>
-            {error && (
-              <motion.div 
-                initial={{ opacity: 0, y: -10 }} 
-                animate={{ opacity: 1, y: 0 }} 
-                exit={{ opacity: 0, y: -10 }}
-                className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2.5 shadow-sm"
-              >
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-                <span>{error}</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+      <div className="bg-white rounded-[1.75rem] border border-slate-200/80 shadow-[0_20px_50px_-20px_rgba(15,23,42,0.15)] p-5 sm:p-8">
 
-          {/* STEP 1: SERVICE & TREATMENT SELECTION */}
-          {step === 1 && (
-            <motion.div 
-              key="step1"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-6"
-            >
-              <div>
-                <label className="text-xs font-black text-slate-900 uppercase tracking-wider block mb-3.5">
-                  1. Select Medical Care Department
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5">
-                  {activeServicesList.map((cat) => {
-                    const isSelected = formData.serviceName === cat.title;
+        {/* ---------- STEP 1 ---------- */}
+        {step === 1 && (
+          <div>
+            <StepHeading title="What do you need?" desc="Pick a service, then the type of care." />
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5" role="radiogroup" aria-label="Service">
+              {categories.map(c => {
+                const Icon = iconFor(c.title);
+                const selected = form.serviceName === c.title;
+                return (
+                  <button
+                    key={c.title}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => chooseCategory(c)}
+                    className={cx(
+                      'relative min-h-[88px] rounded-2xl border p-3.5 text-left flex flex-col justify-between gap-2 transition-all cursor-pointer active:scale-[0.98]',
+                      selected ? 'border-slate-950 bg-slate-950 text-white shadow-lg shadow-slate-950/15' : 'border-slate-200 bg-white text-slate-900 hover:border-slate-400'
+                    )}
+                  >
+                    <Icon className={cx('w-5 h-5', selected ? 'text-emerald-300' : 'text-slate-500')} />
+                    <span className="text-[14px] font-bold leading-snug">{c.title}</span>
+                    {selected && <Check className="absolute top-3 right-3 w-4 h-4 text-white" />}
+                  </button>
+                );
+              })}
+            </div>
+            <FieldError>{errors.serviceName}</FieldError>
+
+            {category && (
+              <div ref={treatmentsRef} className="mt-7 scroll-mt-28">
+                <Label>Type of care</Label>
+                <div className="space-y-2" role="radiogroup" aria-label="Type of care">
+                  {category.sub.map(sub => {
+                    const selected = form.subServiceName === sub.name;
                     return (
                       <button
-                        key={cat.title}
+                        key={sub.name}
                         type="button"
-                        onClick={() => handleCategoryChange(cat.title)}
-                        className={`group p-4 rounded-2xl border text-left transition-all duration-200 relative overflow-hidden flex flex-col justify-between min-h-[105px] cursor-pointer ${
-                          isSelected
-                            ? 'bg-teal-50/90 border-teal-600 shadow-md shadow-teal-700/10 scale-[1.02] ring-2 ring-teal-600/20'
-                            : 'bg-white hover:bg-slate-50 border-slate-200/90 text-slate-800 hover:border-slate-300'
-                        }`}
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => update('subServiceName', sub.name)}
+                        className={cx(
+                          'w-full rounded-2xl border px-4 py-3.5 text-left flex items-start gap-3 transition-colors cursor-pointer',
+                          selected ? 'border-slate-950 bg-slate-50 ring-1 ring-slate-950' : 'border-slate-200 hover:border-slate-400'
+                        )}
                       >
-                        <div className="flex items-center justify-between gap-1 mb-2">
-                          <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
-                            isSelected ? 'bg-teal-700 text-white shadow-xs' : 'bg-slate-100 text-slate-600 border border-slate-200'
-                          }`}>
-                            {cat.badge}
-                          </span>
-                          {isSelected && <CheckCircle2 className="w-4 h-4 text-teal-700 stroke-[2.5]" />}
-                        </div>
-                        <span className={`text-xs font-black leading-snug line-clamp-2 ${isSelected ? 'text-teal-950' : 'text-slate-900'}`}>
-                          {cat.title}
+                        <span className={cx('mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0', selected ? 'border-slate-950 bg-slate-950' : 'border-slate-300')}>
+                          {selected && <span className="h-2 w-2 rounded-full bg-white" />}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-[15px] font-semibold text-slate-950">{sub.name}</span>
+                          {sub.desc && <span className="block text-[13px] text-slate-500 mt-0.5 leading-snug">{sub.desc}</span>}
                         </span>
                       </button>
                     );
                   })}
                 </div>
+                <FieldError>{errors.subServiceName}</FieldError>
               </div>
+            )}
+          </div>
+        )}
 
-              {/* Specific Sub-Service / Treatment Options */}
-              {selectedCategoryObj && (
-                <div className="p-6 rounded-3xl bg-slate-50/80 border border-slate-200/90 space-y-3.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-black text-slate-900 uppercase tracking-wider block">
-                      2. Choose Specific Clinical Treatment
-                    </label>
-                    <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200">
-                      {selectedCategoryObj.sub.length} Options Available
-                    </span>
-                  </div>
+        {/* ---------- STEP 2 ---------- */}
+        {step === 2 && (
+          <div className="space-y-7">
+            <StepHeading title="When and where?" desc="We'll confirm the exact time when we call you." />
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {selectedCategoryObj.sub.map((sub) => {
-                      const isSubSelected = formData.subServiceName === sub.name;
-                      return (
-                        <div
-                          key={sub.name}
-                          onClick={() => handleSubServiceChange(sub.name)}
-                          className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-start justify-between gap-3 ${
-                            isSubSelected
-                              ? 'bg-white border-teal-600 shadow-md ring-2 ring-teal-600/10'
-                              : 'bg-white/80 hover:bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                          }`}
-                        >
-                          <div className="space-y-1">
-                            <div className="text-xs font-black text-slate-900 flex items-center gap-2">
-                              <span>{sub.name}</span>
-                              {isSubSelected && (
-                                <span className="text-[9px] bg-teal-50 text-teal-800 border border-teal-200 font-black px-2 py-0.5 rounded-full">
-                                  Selected
-                                </span>
-                              )}
-                            </div>
-                            {sub.desc && (
-                              <p className="text-xs text-slate-500 leading-relaxed font-normal">
-                                {sub.desc}
-                              </p>
-                            )}
-                          </div>
-                          <div className={`w-4 h-4 rounded-full border-2 mt-0.5 flex items-center justify-center shrink-0 transition-colors ${
-                            isSubSelected ? 'border-teal-700 bg-teal-700' : 'border-slate-300'
-                          }`}>
-                            {isSubSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-end pt-3">
+            <div>
+              <Label>Day</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {[{ label: 'Today', value: localDate(0) }, { label: 'Tomorrow', value: localDate(1) }].map(d => {
+                  const selected = !showOtherDate && form.preferredDate === d.value;
+                  return (
+                    <button
+                      key={d.label}
+                      type="button"
+                      onClick={() => { setShowOtherDate(false); update('preferredDate', d.value); }}
+                      className={cx('h-12 rounded-2xl border text-[15px] font-semibold cursor-pointer transition-colors',
+                        selected ? 'border-slate-950 bg-slate-950 text-white' : 'border-slate-200 text-slate-800 hover:border-slate-400')}
+                    >
+                      {d.label}
+                    </button>
+                  );
+                })}
                 <button
                   type="button"
-                  onClick={() => {
-                    if (validateStep1()) setStep(2);
-                  }}
-                  className="bg-teal-700 hover:bg-teal-800 px-8 py-4 text-white font-black text-xs uppercase tracking-wider rounded-2xl flex items-center gap-2.5 transition-all shadow-md hover:shadow-lg hover:scale-102 active:scale-98 cursor-pointer"
+                  onClick={() => { setShowOtherDate(true); if (form.preferredDate <= localDate(1)) update('preferredDate', localDate(2)); }}
+                  className={cx('h-12 rounded-2xl border text-[15px] font-semibold cursor-pointer transition-colors',
+                    showOtherDate ? 'border-slate-950 bg-slate-950 text-white' : 'border-slate-200 text-slate-800 hover:border-slate-400')}
                 >
-                  <span>Continue to Schedule & Address</span>
-                  <ArrowRight className="w-4 h-4 text-white" />
+                  Other day
                 </button>
               </div>
-            </motion.div>
-          )}
-
-          {/* STEP 2: DATE, TIME & NIZAMABAD LOCALITY */}
-          {step === 2 && (
-            <motion.div 
-              key="step2"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-6"
-            >
-              {/* Date Selection */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <label className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-teal-700" />
-                    <span>Select Appointment Date *</span>
-                  </label>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleDateQuickSelect(0)}
-                      className="px-3.5 py-1.5 text-xs font-black rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 cursor-pointer transition-colors"
-                    >
-                      ⚡ Today
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDateQuickSelect(1)}
-                      className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 cursor-pointer transition-colors"
-                    >
-                      Tomorrow
-                    </button>
-                  </div>
-                </div>
+              {showOtherDate && (
                 <input
                   type="date"
-                  required
-                  min={new Date().toISOString().split('T')[0]}
-                  value={formData.preferredDate}
-                  onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
-                  className="w-full px-4 py-3.5 text-sm rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:border-teal-700 focus:bg-white transition-all shadow-xs"
+                  aria-label="Choose a date"
+                  min={localDate(0)}
+                  value={form.preferredDate}
+                  onChange={(e) => update('preferredDate', e.target.value)}
+                  className={cx(inputClass(errors.preferredDate), 'h-12 mt-2')}
                 />
-              </div>
+              )}
+              <FieldError>{errors.preferredDate}</FieldError>
+            </div>
 
-              {/* Time Slot Selection */}
-              <div>
-                <label className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5 mb-3">
-                  <Clock className="w-4 h-4 text-teal-700" />
-                  <span>Choose Time Slot *</span>
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  {TIME_SLOTS.map((slot) => {
-                    const isSlotSelected = formData.preferredTime === slot.id;
-                    return (
-                      <button
-                        key={slot.id}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, preferredTime: slot.id })}
-                        className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                          isSlotSelected
-                            ? 'bg-teal-50/90 border-teal-600 shadow-md ring-2 ring-teal-600/10'
-                            : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-xl">{slot.icon}</span>
-                          <div>
-                            <div className="text-xs font-black text-slate-900">{slot.label}</div>
-                            <div className={`text-[11px] font-medium mt-0.5 ${isSlotSelected ? 'text-teal-800' : 'text-slate-500'}`}>
-                              {slot.time}
-                            </div>
-                          </div>
-                        </div>
-                        {slot.highlight && (
-                          <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                            Fast Dispatch
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Nizamabad Address & Locality Quick Tags */}
-              <div>
-                <label className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
-                  <MapPin className="w-4 h-4 text-teal-700" />
-                  <span>Patient Address in Nizamabad *</span>
-                </label>
-
-                {/* Quick Area Tags */}
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  {NIZAMABAD_LOCALITIES.map((loc) => (
+            <div>
+              <Label>Time</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {TIME_SLOTS.map(t => {
+                  const selected = form.preferredTime === t.id;
+                  return (
                     <button
-                      key={loc}
+                      key={t.id}
                       type="button"
-                      onClick={() => handleLocalityTag(loc)}
-                      className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-teal-50 hover:text-teal-800 text-slate-700 text-xs font-bold border border-slate-200 transition-colors cursor-pointer"
+                      onClick={() => update('preferredTime', t.id)}
+                      className={cx('rounded-2xl border px-3.5 py-3 text-left flex items-center gap-3 cursor-pointer transition-colors',
+                        selected ? 'border-slate-950 bg-slate-950 text-white' : 'border-slate-200 text-slate-900 hover:border-slate-400')}
                     >
-                      + {loc}
+                      <t.icon className={cx('w-5 h-5 shrink-0', selected ? 'text-amber-300' : 'text-slate-400')} />
+                      <span className="min-w-0 leading-tight">
+                        <span className="block text-[15px] font-semibold">{t.label}</span>
+                        <span className={cx('block text-[12px]', selected ? 'text-white/70' : 'text-slate-500')}>{t.time}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="bf-address">Patient's address in Nizamabad</Label>
+              <textarea
+                id="bf-address"
+                rows={3}
+                value={form.address}
+                onChange={(e) => update('address', e.target.value)}
+                placeholder="House no., street, landmark"
+                autoComplete="street-address"
+                className={cx(inputClass(errors.address), 'py-3 resize-none')}
+              />
+              <FieldError>{errors.address}</FieldError>
+              <div className="mt-2.5">
+                <div className="text-[12px] font-semibold text-slate-500 mb-1.5">Tap to add your area</div>
+                <div className="flex gap-1.5 overflow-x-auto scrollbar-none -mx-5 px-5 sm:mx-0 sm:px-0 sm:flex-wrap">
+                  {AREAS.map(a => (
+                    <button
+                      key={a}
+                      type="button"
+                      onClick={() => addArea(a)}
+                      className="h-9 px-3 rounded-full border border-slate-200 bg-white text-[13px] font-semibold text-slate-700 hover:border-slate-400 shrink-0 cursor-pointer"
+                    >
+                      {a}
                     </button>
                   ))}
                 </div>
-
-                <textarea
-                  rows="3"
-                  required
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  placeholder="House / Flat No, Landmark, Colony or Street Name in Nizamabad..."
-                  className="w-full px-4 py-3 text-sm rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-teal-700 focus:bg-white resize-none transition-all shadow-xs"
-                ></textarea>
               </div>
-
-              <div className="flex items-center justify-between pt-3">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="bg-slate-100 hover:bg-slate-200 px-6 py-3.5 text-slate-700 font-bold text-xs uppercase tracking-wider rounded-2xl flex items-center gap-2 transition-all cursor-pointer"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Back</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (validateStep2()) setStep(3);
-                  }}
-                  className="bg-teal-700 hover:bg-teal-800 px-8 py-4 text-white font-black text-xs uppercase tracking-wider rounded-2xl flex items-center gap-2.5 transition-all shadow-md hover:shadow-lg hover:scale-102 active:scale-98 cursor-pointer"
-                >
-                  <span>Continue to Patient Details</span>
-                  <ArrowRight className="w-4 h-4 text-white" />
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* STEP 3: PATIENT CONTACT & FINAL CONFIRMATION */}
-          {step === 3 && (
-            <motion.div 
-              key="step3"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-6"
-            >
-              {/* Summary Card */}
-              <div className="p-5 bg-teal-50/90 border border-teal-200 rounded-3xl text-left space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-black text-teal-800 uppercase tracking-widest block">
-                    Care Order Summary
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="text-xs text-teal-700 underline font-bold hover:text-teal-900 cursor-pointer"
-                  >
-                    Edit Selections
-                  </button>
-                </div>
-                <div className="text-sm font-black text-slate-900">
-                  {formData.serviceName} • {formData.subServiceName}
-                </div>
-                <div className="text-xs text-slate-600 font-medium">
-                  📅 {formData.preferredDate} ({formData.preferredTime}) • 📍 {formData.address}
-                </div>
-              </div>
-
-              {/* Patient Name & Phone */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                    <User className="w-4 h-4 text-teal-700" />
-                    <span>Patient / Attendant Name *</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Full name of patient"
-                    className="w-full px-4 py-3.5 text-sm rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-teal-700 focus:bg-white font-medium transition-all shadow-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                    <Phone className="w-4 h-4 text-teal-700" />
-                    <span>10-Digit Mobile Number *</span>
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    maxLength="14"
-                    value={formData.mobile}
-                    onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                    placeholder="e.g. 92488 49388"
-                    className="w-full px-4 py-3.5 text-sm rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-teal-700 focus:bg-white font-medium transition-all shadow-xs"
-                  />
-                </div>
-              </div>
-
-              {/* Optional Email & Clinical Notes */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                    <Mail className="w-4 h-4 text-teal-700" />
-                    <span>Email Address (Optional)</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="For instant confirmation & receipts"
-                    className="w-full px-4 py-3 text-sm rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-teal-700 focus:bg-white transition-all shadow-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                    <FileText className="w-4 h-4 text-teal-700" />
-                    <span>Medical Notes / Symptoms (Optional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder="e.g. Oxygen needed, post-surgery recovery"
-                    className="w-full px-4 py-3 text-sm rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-teal-700 focus:bg-white transition-all shadow-xs"
-                  />
-                </div>
-              </div>
-
-              {/* Zero advance assurance */}
-              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-900 flex items-center gap-3 font-semibold">
-                <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0" />
-                <span>Zero Advance Payment. Payment is collected only after clinical setup and home service delivery is completed.</span>
-              </div>
-
-              <div className="flex items-center justify-between pt-3">
-                <button
-                  type="button"
-                  onClick={() => setStep(2)}
-                  className="bg-slate-100 hover:bg-slate-200 px-6 py-3.5 text-slate-700 font-bold text-xs uppercase tracking-wider rounded-2xl flex items-center gap-2 transition-all cursor-pointer"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Back</span>
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-teal-700 hover:bg-teal-800 px-10 py-4 text-white font-black text-xs uppercase tracking-widest rounded-2xl flex items-center gap-3 transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 disabled:opacity-70 cursor-pointer"
-                >
-                  {loading ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                      <span>Confirming Appointment...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Confirm & Dispatch Appointment</span>
-                      <ArrowRight className="w-4 h-4 text-white" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-        </form>
-      ) : (
-        /* 3. Ultra-Smooth Success Confirmation Screen */
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="p-8 sm:p-14 text-center space-y-7"
-        >
-          <div className="w-20 h-20 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center mx-auto shadow-sm animate-in zoom-in-50">
-            <CheckCircle2 className="w-10 h-10 stroke-[2.5]" />
+            </div>
           </div>
+        )}
 
-          <div className="space-y-2">
-            <span className="text-[10px] font-mono font-black uppercase tracking-widest text-emerald-800 bg-emerald-50 px-3.5 py-1 rounded-full border border-emerald-200">
-              Appointment Dispatched
-            </span>
-            <h3 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-              Booking Received Successfully!
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
-              Our clinical care coordinator in Nizamabad will call you within <strong className="text-slate-900">15 minutes</strong> to finalize clinician arrival and logistics.
-            </p>
-          </div>
+        {/* ---------- STEP 3 ---------- */}
+        {step === 3 && (
+          <div className="space-y-6">
+            <StepHeading title="Who is the patient?" desc="We'll call this number to confirm." />
 
-          {/* Reference Card with 1-Click Copy */}
-          <div className="max-w-md mx-auto p-6 bg-slate-50 border border-slate-200 rounded-3xl text-left space-y-3 shadow-xs">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-200">
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Booking Reference</span>
-                <span className="font-mono font-black text-teal-800 text-base">
-                  {confirmedBooking.bookingId || confirmedBooking._id}
+            {/* Summary */}
+            <div className="rounded-2xl bg-slate-50 border border-slate-200 divide-y divide-slate-200/70 text-[14px]">
+              <button type="button" onClick={() => goTo(1)} className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left cursor-pointer">
+                <span className="min-w-0">
+                  <span className="block text-[12px] text-slate-500">Service</span>
+                  <span className="block font-semibold text-slate-950 truncate">{form.subServiceName}</span>
                 </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => copyBookingId(confirmedBooking.bookingId || confirmedBooking._id)}
-                className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
-              >
-                {copiedId ? <CheckCheck className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
-                <span>{copiedId ? 'Copied!' : 'Copy ID'}</span>
+                <Pencil className="w-4 h-4 text-slate-400 shrink-0" />
+              </button>
+              <button type="button" onClick={() => goTo(2)} className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left cursor-pointer">
+                <span className="min-w-0">
+                  <span className="block text-[12px] text-slate-500">When & where</span>
+                  <span className="block font-semibold text-slate-950 truncate">{prettyDate(form.preferredDate)} · {slot?.label}</span>
+                  <span className="block text-slate-600 truncate">{form.address}</span>
+                </span>
+                <Pencil className="w-4 h-4 text-slate-400 shrink-0" />
               </button>
             </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500 font-medium">Patient:</span>
-              <span className="font-bold text-slate-900">{confirmedBooking.name}</span>
+
+            <div>
+              <Label htmlFor="bf-name">Patient name</Label>
+              <input
+                id="bf-name"
+                value={form.name}
+                onChange={(e) => update('name', e.target.value)}
+                autoComplete="name"
+                placeholder="Full name"
+                className={cx(inputClass(errors.name), 'h-12')}
+              />
+              <FieldError>{errors.name}</FieldError>
             </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500 font-medium">Service:</span>
-              <span className="font-bold text-slate-900">{confirmedBooking.serviceName}</span>
+
+            <div>
+              <Label htmlFor="bf-mobile">Mobile number</Label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[16px] font-semibold text-slate-500 pointer-events-none">+91</span>
+                <input
+                  id="bf-mobile"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel-national"
+                  value={form.mobile}
+                  onChange={(e) => update('mobile', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  placeholder="10-digit number"
+                  className={cx(inputClass(errors.mobile), 'h-12 pl-14 tracking-wide')}
+                />
+              </div>
+              <FieldError>{errors.mobile}</FieldError>
             </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500 font-medium">Schedule:</span>
-              <span className="font-bold text-slate-900">{confirmedBooking.preferredDate} ({confirmedBooking.preferredTime})</span>
-            </div>
+
+            {showExtras ? (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="bf-notes">Notes for the care team <span className="font-normal text-slate-400">(optional)</span></Label>
+                  <textarea
+                    id="bf-notes"
+                    rows={3}
+                    value={form.notes}
+                    onChange={(e) => update('notes', e.target.value)}
+                    placeholder="Symptoms, age, oxygen needed, recent surgery…"
+                    className={cx(inputClass(false), 'py-3 resize-none')}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="bf-email">Email <span className="font-normal text-slate-400">(optional, for a confirmation email)</span></Label>
+                  <input
+                    id="bf-email"
+                    type="email"
+                    autoComplete="email"
+                    value={form.email}
+                    onChange={(e) => update('email', e.target.value)}
+                    className={cx(inputClass(false), 'h-12')}
+                  />
+                </div>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setShowExtras(true)} className="text-[14px] font-semibold text-slate-700 hover:text-slate-950 flex items-center gap-1.5 cursor-pointer">
+                <Plus className="w-4 h-4" /> Add notes or email (optional)
+              </button>
+            )}
+
+            <p className="text-[13px] text-slate-500 flex items-start gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              No advance payment. You pay only after care is delivered.
+            </p>
+
+            {submitError && (
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4" role="alert">
+                <div className="flex items-start gap-2.5 text-[14px] font-semibold text-rose-800">
+                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span>{submitError} Your details are still here — try again, or send them to us on WhatsApp.</span>
+                </div>
+                <a
+                  href={whatsappFallback()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 h-11 rounded-xl bg-emerald-600 text-white font-bold text-[14px] flex items-center justify-center gap-2"
+                >
+                  <MessageSquare className="w-4 h-4" /> Send booking on WhatsApp
+                </a>
+              </div>
+            )}
           </div>
+        )}
 
-          {/* Action desk buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 max-w-md mx-auto">
-            <a
-              href={`https://wa.me/919248849388?text=${encodeURIComponent(`Hi Nest Cares, I just booked ${confirmedBooking.serviceName} (Ref: ${confirmedBooking.bookingId || confirmedBooking._id}) for ${confirmedBooking.name}. Please confirm dispatch.`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-4 px-6 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer hover:scale-102"
-            >
-              <MessageSquare className="w-4 h-4 text-white" />
-              <span>Track on WhatsApp</span>
-            </a>
-
+        {/* ---------- Actions ---------- */}
+        <div className="fixed md:static bottom-0 inset-x-0 z-40 bg-white/95 md:bg-transparent backdrop-blur md:backdrop-blur-none border-t border-slate-200 md:border-0 px-4 md:px-0 pt-3 md:pt-8 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:pb-0">
+          <div className="flex gap-2 max-w-5xl mx-auto">
+            {step > 1 && (
+              <button
+                type="button"
+                onClick={() => goTo(step - 1)}
+                aria-label="Back"
+                className="h-[52px] w-[52px] md:w-auto md:px-6 rounded-full border border-slate-200 bg-white text-slate-800 font-bold text-[15px] flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+              >
+                <ArrowLeft className="w-5 h-5" /> <span className="hidden md:inline">Back</span>
+              </button>
+            )}
             <button
-              type="button"
-              onClick={resetForm}
-              className="w-full py-4 px-6 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold uppercase tracking-wider rounded-2xl transition-all cursor-pointer"
+              type="submit"
+              disabled={submitting}
+              className="btn-liquid-ink flex-1 md:flex-none md:ml-auto md:min-w-[14rem] h-[52px] px-6 rounded-full font-bold text-[16px] flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer active:scale-[0.99] transition-transform"
             >
-              Book Another Service
+              {submitting ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Booking…</>
+              ) : isLast ? (
+                <>Confirm booking <Check className="w-5 h-5" /></>
+              ) : (
+                <>Continue <ArrowRight className="w-5 h-5" /></>
+              )}
             </button>
           </div>
-        </motion.div>
-      )}
-
-    </div>
+        </div>
+      </div>
+    </form>
   );
 };
 

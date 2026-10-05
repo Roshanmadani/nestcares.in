@@ -1,72 +1,69 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { authAPI, getErrorMessage } from '../services/api';
 
 const AuthContext = createContext();
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://nestcares-in.onrender.com/api';
+// Both key pairs are kept in sync: older parts of the app read the legacy names.
+const TOKEN_KEYS = ['token', 'healthcare_admin_token'];
+const USER_KEYS = ['user', 'healthcare_admin_user'];
+
+const readStoredSession = () => {
+  const token = TOKEN_KEYS.map(k => localStorage.getItem(k)).find(Boolean) || null;
+  let user = null;
+  const rawUser = USER_KEYS.map(k => localStorage.getItem(k)).find(Boolean);
+  if (token && rawUser) {
+    try {
+      user = JSON.parse(rawUser);
+    } catch (e) {
+      console.error('Failed to parse stored user', e);
+    }
+  }
+  return { token, user: token ? (user || { name: 'Administrator' }) : null };
+};
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState(readStoredSession);
 
-  useEffect(() => {
-    // Check if token exists in either standard or legacy key
-    const token = localStorage.getItem('token') || localStorage.getItem('healthcare_admin_token');
-    const storedUser = localStorage.getItem('user') || localStorage.getItem('healthcare_admin_user');
-    
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (e) {
-          console.error("Failed to parse stored user", e);
-        }
-      }
-    }
-    setLoading(false);
+  const logout = useCallback(() => {
+    [...TOKEN_KEYS, ...USER_KEYS].forEach(k => localStorage.removeItem(k));
+    setSession({ token: null, user: null });
   }, []);
+
+  // Any authenticated request that comes back 401 signs the admin out
+  useEffect(() => {
+    window.addEventListener('auth:expired', logout);
+    return () => window.removeEventListener('auth:expired', logout);
+  }, [logout]);
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
-        email,
-        password
-      });
-
-      if (response.data.success) {
-        const { token, user } = response.data;
-        // Sync both token keys for maximum compatibility
-        localStorage.setItem('token', token);
-        localStorage.setItem('healthcare_admin_token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('healthcare_admin_user', JSON.stringify(user));
-        
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        setUser(user);
+      const data = await authAPI.login(email.trim(), password);
+      if (data.success && data.token) {
+        TOKEN_KEYS.forEach(k => localStorage.setItem(k, data.token));
+        USER_KEYS.forEach(k => localStorage.setItem(k, JSON.stringify(data.user)));
+        setSession({ token: data.token, user: data.user });
         return { success: true };
       }
-      return { success: false, message: response.data.message || 'Login failed' };
+      return { success: false, message: data.message || 'Login failed' };
     } catch (error) {
-      console.error('Login error:', error);
       return {
         success: false,
-        message: error.response?.data?.message || 'Login failed. Please check your credentials.'
+        message: getErrorMessage(error, 'Login failed. Please check your credentials.')
       };
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('healthcare_admin_token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('healthcare_admin_user');
-    delete axios.defaults.headers.common['Authorization'];
-    setUser(null);
-  };
-
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, isAuthenticated: !!user }}>
+    <AuthContext.Provider
+      value={{
+        user: session.user,
+        token: session.token,
+        login,
+        logout,
+        loading: false,
+        isAuthenticated: !!session.token
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

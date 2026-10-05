@@ -23,12 +23,11 @@ import Dashboard from './admin/Dashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
 import NotFound from './pages/NotFound';
 
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './components/common/ToastContext';
 
 const AppContent = () => {
   const location = useLocation();
-  const { token } = useAuth();
   
   // Public Config & Content States - Pre-load from local mock cache for instant rendering
   const [services, setServices] = useState(mockDb.getServices(false));
@@ -42,7 +41,7 @@ const AppContent = () => {
     try {
       // Parallelize all initial fetches to resolve concurrently
       const [resSettings, resServices, resTestimonials, resFaqs, resDocs] = await Promise.allSettled([
-        settingsAPI.getWebSettings().catch(() => null),
+        settingsAPI.getAll().catch(() => null),
         servicesAPI.getAll().catch(() => null),
         testimonialsAPI.getAll().catch(() => null),
         faqsAPI.getAll().catch(() => null),
@@ -50,7 +49,8 @@ const AppContent = () => {
       ]);
 
       if (resSettings.status === 'fulfilled' && resSettings.value?.success) {
-        setSettings(prev => ({ ...prev, web: resSettings.value.data }));
+        // { web, contact, homepage, ... } — keep cached values for any key the API lacks
+        setSettings(prev => ({ ...prev, ...resSettings.value.data }));
       }
 
       if (resServices.status === 'fulfilled' && resServices.value?.success) {
@@ -85,7 +85,7 @@ const AppContent = () => {
       setLoading(false);
     }, 650);
     return () => clearTimeout(timer);
-  }, [token]);
+  }, []);
 
   // Update Favicon & Title from brand settings dynamically
   useEffect(() => {
@@ -143,6 +143,7 @@ const AppContent = () => {
   const isLoginRoute = location.pathname.startsWith('/login');
   const isDoctorRoute = location.pathname.startsWith('/doctor');
   const hideLayout = isAdminRoute || isLoginRoute || isDoctorRoute;
+  const isBookingRoute = location.pathname === '/book';
 
   return (
     <>
@@ -156,7 +157,7 @@ const AppContent = () => {
       <ScrollToTop />
       {!hideLayout && <Navbar webSettings={settings?.web} />}
       
-      <main className={hideLayout ? '' : 'min-h-[80vh] pt-20 sm:pt-24 pb-24 md:pb-0'}>
+      <main className={hideLayout ? '' : `min-h-[80vh] pt-20 sm:pt-24 ${isBookingRoute ? 'pb-0' : 'pb-24'} md:pb-0`}>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={
@@ -184,22 +185,7 @@ const AppContent = () => {
           <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
           
           {/* Admin Protected Dashboard Tab */}
-          <Route path="/admin" element={
-            <Dashboard 
-              services={services}
-              refreshServices={fetchData}
-              doctors={doctors}
-              refreshDoctors={fetchData}
-              testimonials={testimonials}
-              refreshTestimonials={fetchData}
-              faqs={faqs}
-              refreshFaqs={fetchData}
-              webSettings={settings?.web}
-              refreshWebSettings={fetchData}
-              contactSettings={settings?.contact}
-              refreshContactSettings={fetchData}
-            />
-          } />
+          <Route path="/admin" element={<Dashboard refreshPublicData={fetchData} />} />
 
           {/* 404 Catch-All Route */}
           <Route path="*" element={<NotFound />} />
@@ -207,8 +193,9 @@ const AppContent = () => {
       </main>
 
       {!hideLayout && <Footer webSettings={settings?.web} contactSettings={settings?.contact} />}
-      {!hideLayout && <FloatingButtons contactSettings={settings?.contact} />}
-      {!hideLayout && <MobileBottomNav contactSettings={settings?.contact} />}
+      {/* The booking page has its own sticky action bar on phones */}
+      {!hideLayout && <FloatingButtons contactSettings={settings?.contact} hideOnMobile={isBookingRoute} />}
+      {!hideLayout && !isBookingRoute && <MobileBottomNav contactSettings={settings?.contact} />}
     </>
   );
 };

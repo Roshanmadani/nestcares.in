@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  ShieldCheck, HeartPulse, Clock, Phone, Award, 
-  ArrowRight, CheckCircle2, Sparkles, Star, Users, 
-  Activity, Stethoscope, ChevronRight, HelpCircle,
-  Truck, Microscope, UserCheck, Check, MessageSquare, ChevronDown,
-  MapPin, PhoneCall, Calendar, Zap, ArrowUpRight
+import { motion, MotionConfig } from 'framer-motion';
+import {
+  ShieldCheck, HeartPulse, Clock,
+  ArrowRight, CheckCircle2, Star, Activity, Stethoscope,
+  Truck, Microscope, UserCheck, MessageSquare,
+  MapPin, PhoneCall, ArrowUpRight, Plus
 } from 'lucide-react';
 import { resolveImageUrl } from '../utils/url';
 
@@ -13,69 +13,57 @@ const LUXURY_SERVICES = [
   {
     id: 'doctor-consultation',
     title: 'Doctor Consultation',
-    teluguTitle: 'డాక్టర్ హోమ్ విజిట్',
     desc: 'Senior MBBS / MD physicians visit your home in Nizamabad for physical examination, diagnostics, and prescriptions.',
-    image: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=600',
+    image: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=700',
     badge: 'Home Visit',
     icon: Stethoscope,
-    tags: ['General Medicine', 'Specialist Visits', 'Bedside Care'],
-    badgeStyle: 'bg-teal-50 text-teal-800 border-teal-200'
+    tags: ['General Medicine', 'Specialist Visits', 'Bedside Care']
   },
   {
     id: 'ambulance-services',
     title: '24/7 Ambulance Dispatch',
-    teluguTitle: '24/7 అంబులెన్స్ సేవలు',
     desc: 'Rapid Basic Life Support (BLS) and Advanced ICU Ventilator ambulances with emergency paramedics on standby.',
-    image: 'https://images.unsplash.com/photo-1587745416684-47953f16f02f?auto=format&fit=crop&q=80&w=600',
+    image: 'https://images.unsplash.com/photo-1587745416684-47953f16f02f?auto=format&fit=crop&q=80&w=700',
     badge: '15-Min Response',
     emergency: true,
     icon: Truck,
-    tags: ['Oxygen Support', 'ICU Ventilator', 'Inter-City Transfer'],
-    badgeStyle: 'bg-rose-50 text-rose-700 border-rose-200'
+    tags: ['Oxygen Support', 'ICU Ventilator', 'Inter-City Transfer']
   },
   {
     id: 'nursing-services',
     title: 'Professional Home Nursing',
-    teluguTitle: 'ప్రొఫెషనల్ హోమ్ నర్సింగ్',
     desc: 'Certified ICU and general bedside nurses for 12h / 24h continuous clinical care, wound dressing, and vitals monitoring.',
-    image: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&q=80&w=600',
+    image: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&q=80&w=700',
     badge: '12h / 24h Shifts',
     icon: HeartPulse,
-    tags: ['Bedside Care', 'Tracheostomy', 'Injections & IV'],
-    badgeStyle: 'bg-emerald-50 text-emerald-800 border-emerald-200'
+    tags: ['Bedside Care', 'Tracheostomy', 'Injections & IV']
   },
   {
     id: 'icu-setup',
     title: 'ICU Setup at Home',
-    teluguTitle: 'ఇంటి వద్ద ICU సెటప్',
     desc: 'Complete hospital-grade intensive care unit in your bedroom: motorized ICU bed, ventilator, 5-para monitor, and oxygen.',
-    image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=600',
+    image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=700',
     badge: 'Hospital-Grade',
     icon: Activity,
-    tags: ['Motorized ICU Bed', 'BiPAP / CPAP', 'Multipara Monitor'],
-    badgeStyle: 'bg-blue-50 text-blue-800 border-blue-200'
+    tags: ['Motorized ICU Bed', 'BiPAP / CPAP', 'Multipara Monitor']
   },
   {
     id: 'lab-services',
     title: 'Doorstep Lab Diagnostics',
-    teluguTitle: 'డోర్‌స్టెప్ ల్యాబ్ టెస్ట్‌లు',
     desc: 'Certified phlebotomists collect blood & urine samples at your home. NABL certified test reports delivered in 4-6 hours.',
-    image: 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&q=80&w=600',
+    image: 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&q=80&w=700',
     badge: 'Doorstep Sample',
     icon: Microscope,
-    tags: ['Complete Health Panel', 'Cardiac Profile', 'Fast Reports'],
-    badgeStyle: 'bg-amber-50 text-amber-800 border-amber-200'
+    tags: ['Complete Health Panel', 'Cardiac Profile', 'Fast Reports']
   },
   {
     id: 'physiotherapy',
     title: 'Home Physiotherapy',
-    teluguTitle: 'హోమ్ ఫిజియోథెరపీ',
     desc: 'Licensed physiotherapists for post-surgery joint rehabilitation, neuro-recovery, stroke rehab, and geriatric mobility.',
-    image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=600',
+    image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=700',
     badge: 'Mobility Rehab',
     icon: UserCheck,
-    tags: ['Stroke Recovery', 'Joint Mobility', 'Pain Relief'],
-    badgeStyle: 'bg-indigo-50 text-indigo-800 border-indigo-200'
+    tags: ['Stroke Recovery', 'Joint Mobility', 'Pain Relief']
   }
 ];
 
@@ -83,26 +71,22 @@ const LUXURY_PILLARS = [
   {
     title: 'Zero Advance Required',
     desc: 'Pay transparently only after medical setup or bedside care is delivered.',
-    icon: CheckCircle2,
-    iconBg: 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+    icon: CheckCircle2
   },
   {
     title: '100% Certified Clinicians',
     desc: 'All doctors, nurses, and technicians hold active state medical council registrations.',
-    icon: ShieldCheck,
-    iconBg: 'bg-teal-50 text-teal-700 border border-teal-200'
+    icon: ShieldCheck
   },
   {
-    title: 'Hospital-Grade Bio-Equipment',
+    title: 'Hospital-Grade Equipment',
     desc: 'Calibrated ventilators, multipara monitors, and sanitized ICU motorized beds.',
-    icon: Activity,
-    iconBg: 'bg-blue-50 text-blue-700 border border-blue-200'
+    icon: Activity
   },
   {
-    title: '15-Minute Response Protocol',
+    title: '15-Minute Response',
     desc: 'Dedicated emergency medical coordinator desk in Nizamabad for rapid triage.',
-    icon: Clock,
-    iconBg: 'bg-amber-50 text-amber-700 border border-amber-200'
+    icon: Clock
   }
 ];
 
@@ -125,13 +109,142 @@ const LUXURY_FAQS = [
   }
 ];
 
-const Home = ({ 
-  services = [], 
-  testimonials = [], 
-  faqs = [], 
+const LOCALITIES = [
+  { name: 'Kanteshwar', tag: 'Fast Dispatch' },
+  { name: 'Subhash Nagar', tag: '24/7 Nursing' },
+  { name: 'Pragathi Nagar', tag: 'Home Visits' },
+  { name: 'Vinayak Nagar', tag: 'ICU Care' },
+  { name: 'Khaleelwadi', tag: 'Lab Tests' },
+  { name: 'Mubaraknagar', tag: 'Care Takers' },
+  { name: 'Madhavnagar', tag: 'Physiotherapy' },
+  { name: 'Shivaji Nagar', tag: 'Elder Care' },
+  { name: 'Armoor Hub', tag: 'Doctor Visits' },
+  { name: 'Bodhan City', tag: 'ICU Setup' },
+  { name: 'Kamareddy', tag: 'Ambulance' },
+  { name: 'Banswada', tag: 'Medical Eqpt' }
+];
+
+const SEO_KEYWORDS = [
+  '#1 Home Nursing Care',
+  'Home ICU Setup',
+  'Doctor Consultation at Home',
+  'Elderly & Bedridden Care',
+  'Physiotherapy',
+  'Oxygen Concentrator Rental'
+];
+
+const FALLBACK_DOCTORS = [
+  {
+    _id: 'doc_1',
+    name: 'Dr. K. Srinivas Reddy',
+    specialty: 'Senior General Physician & Geriatrician',
+    qualifications: 'MBBS, MD (General Medicine)',
+    experience: '14+ Years Exp',
+    image: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400',
+    availability: 'Mon - Sat (9:00 AM - 7:00 PM)'
+  },
+  {
+    _id: 'doc_2',
+    name: 'Dr. Ananya Sharma',
+    specialty: 'Critical Care & ICU Consultant',
+    qualifications: 'MBBS, DA, DNB (Critical Care)',
+    experience: '10+ Years Exp',
+    image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400',
+    availability: '24/7 Standby on Request'
+  },
+  {
+    _id: 'doc_3',
+    name: 'Dr. M. Venkat Rao',
+    specialty: 'Consultant Cardiologist & Physician',
+    qualifications: 'MBBS, MD, DM (Cardiology)',
+    experience: '16+ Years Exp',
+    image: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=400',
+    availability: 'Mon, Wed, Fri (2:00 PM - 6:00 PM)'
+  }
+];
+
+const EASE_OUT = [0.16, 1, 0.3, 1];
+
+// Fades a block up as it scrolls into view. MotionConfig below drops the
+// movement for users with reduced-motion enabled.
+const Reveal = ({ children, delay = 0, className = '' }) => (
+  <motion.div
+    className={className}
+    initial={{ opacity: 0, y: 18 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: '-40px' }}
+    transition={{ duration: 0.7, ease: EASE_OUT, delay }}
+  >
+    {children}
+  </motion.div>
+);
+
+const Eyebrow = ({ children, tone = 'light' }) => (
+  <div className={`inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] ${tone === 'dark' ? 'text-emerald-300' : 'text-slate-500'}`}>
+    <span className={`h-px w-6 ${tone === 'dark' ? 'bg-emerald-300/60' : 'bg-slate-400/70'}`} />
+    {children}
+  </div>
+);
+
+const SectionHeader = ({ eyebrow, title, desc, link }) => (
+  <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-7 sm:mb-10">
+    <div className="space-y-3 max-w-2xl">
+      <Eyebrow>{eyebrow}</Eyebrow>
+      <h2 className="text-[1.75rem] leading-[1.1] sm:text-4xl lg:text-[2.75rem] font-black text-slate-950 tracking-[-0.03em]">
+        {title}
+      </h2>
+      {desc && (
+        <p className="text-slate-600 text-[15px] sm:text-base leading-relaxed max-w-xl">{desc}</p>
+      )}
+    </div>
+    {link && (
+      <Link
+        to={link.to}
+        className="liquid-glass self-start md:self-auto inline-flex items-center gap-1.5 pl-4 pr-3 py-2.5 rounded-full text-[13px] font-bold text-slate-900 hover:-translate-y-0.5 transition-transform shrink-0"
+      >
+        <span>{link.label}</span>
+        <ArrowUpRight className="w-4 h-4" />
+      </Link>
+    )}
+  </div>
+);
+
+// Horizontal snap rail on phones, grid from md up. Reports scroll progress so
+// the rail can show where the user is.
+const SnapRail = ({ children, className = '' }) => {
+  const railRef = useRef(null);
+  const [progress, setProgress] = useState(0);
+
+  const handleScroll = () => {
+    const el = railRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setProgress(max > 0 ? el.scrollLeft / max : 0);
+  };
+
+  return (
+    <>
+      <div
+        ref={railRef}
+        onScroll={handleScroll}
+        className={`flex md:grid gap-4 sm:gap-5 overflow-x-auto md:overflow-visible snap-x snap-mandatory scroll-px-4 -mx-4 px-4 md:mx-0 md:px-0 pb-2 scrollbar-none ${className}`}
+      >
+        {children}
+      </div>
+      <div className="md:hidden mt-4 mx-auto h-1 w-24 rounded-full bg-slate-900/10 overflow-hidden" aria-hidden="true">
+        <div
+          className="h-full w-1/3 rounded-full bg-slate-900 transition-transform duration-150"
+          style={{ transform: `translateX(${progress * 200}%)` }}
+        />
+      </div>
+    </>
+  );
+};
+
+const Home = ({
+  faqs = [],
   doctors = [],
-  webSettings, 
-  contactSettings 
+  contactSettings
 }) => {
   const navigate = useNavigate();
   const phone = contactSettings?.phoneNumbers?.[0] || "+91 92488 49388";
@@ -143,511 +256,507 @@ const Home = ({
 
   const displayFaqs = (faqs && faqs.length > 0) ? faqs : LUXURY_FAQS;
 
-  const displayDoctors = (doctors && doctors.length > 0) 
+  // Backend doctors use image/specialty/qualifications; the local mock cache
+  // uses img/speciality/designation. Normalise so either shape renders.
+  const displayDoctors = ((doctors && doctors.length > 0)
     ? doctors.filter(d => d.isActive !== false && d.active !== false)
-    : [
-        {
-          _id: 'doc_1',
-          name: 'Dr. K. Srinivas Reddy',
-          specialty: 'Senior General Physician & Geriatrician',
-          qualifications: 'MBBS, MD (General Medicine)',
-          experience: '14+ Years Exp',
-          image: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400',
-          availability: 'Mon - Sat (9:00 AM - 7:00 PM)'
-        },
-        {
-          _id: 'doc_2',
-          name: 'Dr. Ananya Sharma',
-          specialty: 'Critical Care & ICU Consultant',
-          qualifications: 'MBBS, DA, DNB (Critical Care)',
-          experience: '10+ Years Exp',
-          image: 'https://images.unsplash.com/photo-1594824813689-53b9f4e2f9d6?auto=format&fit=crop&q=80&w=400',
-          availability: '24/7 Standby on Request'
-        },
-        {
-          _id: 'doc_3',
-          name: 'Dr. M. Venkat Rao',
-          specialty: 'Consultant Cardiologist & Physician',
-          qualifications: 'MBBS, MD, DM (Cardiology)',
-          experience: '16+ Years Exp',
-          image: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=400',
-          availability: 'Mon, Wed, Fri (2:00 PM - 6:00 PM)'
-        }
-      ];
+    : FALLBACK_DOCTORS
+  ).map(d => ({
+    ...d,
+    image: d.image || d.img,
+    specialty: d.specialty || d.speciality || d.designation,
+    qualifications: d.qualifications || d.designation || 'MBBS',
+    availability: d.availability || 'Available for Home Visits'
+  }));
 
   const handleBookService = (serviceTitle) => {
     navigate('/book', { state: { selectService: serviceTitle } });
   };
 
   return (
-    <div className="min-h-screen text-slate-800 font-sans relative pb-28 pt-8">
-      
-      {/* ========================================================
-          1. PROFESSIONAL HERO SECTION (CLEAN & CONFIDENT)
-      ======================================================== */}
-      <section className="relative pt-8 sm:pt-16 pb-12 sm:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-left">
-        
-        <div className="max-w-4xl space-y-6 sm:space-y-8">
-          
-          {/* Location & Live Dispatch Pill */}
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-teal-50 border border-teal-200 text-teal-800 text-xs sm:text-sm font-bold shadow-xs">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-            <span className="font-extrabold text-slate-900">Nizamabad</span>
-            <span className="text-slate-400">•</span>
-            <span>15-Minute Clinical Response Protocol Active</span>
-          </div>
+    <MotionConfig reducedMotion="user">
+      <div className="min-h-screen text-slate-800 font-sans relative pb-10 sm:pb-16 overflow-x-clip">
 
-          {/* Large Bold Headline with Trust Typography */}
-          <h1 className="text-3xl sm:text-5xl lg:text-7xl font-black text-slate-950 tracking-tight leading-[1.08]">
-            Hospital-Grade Intensive Care <br className="hidden sm:inline" />
-            <span className="text-teal-800">
-              In Your Home.
-            </span>
-          </h1>
-
-          {/* Generous Subtitle */}
-          <p className="text-slate-600 text-sm sm:text-xl leading-relaxed max-w-2xl font-normal">
-            Certified doctors, 24/7 ICU bedside nurses, emergency ambulances, and complete hospital bedroom setups with zero advance payment.
-          </p>
-
-          {/* High-Impact Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
-            <Link
-              to="/book"
-              className="px-8 py-4 bg-teal-800 hover:bg-teal-900 text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider rounded-2xl shadow-md transition-all hover:scale-102 flex items-center justify-center gap-2.5"
-            >
-              <span>Book Appointment Online</span>
-              <ArrowRight className="w-5 h-5 text-teal-200" />
-            </Link>
-
-            <a
-              href={`tel:${cleanPhone}`}
-              className="px-8 py-4 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 font-bold text-xs sm:text-sm rounded-2xl shadow-xs transition-all flex items-center justify-center gap-2.5"
-            >
-              <PhoneCall className="w-5 h-5 text-teal-700" />
-              <span>Call Helpline: {phone}</span>
-            </a>
-          </div>
-
-          {/* 3 Elevated Frosted Glass Metric Pills */}
-          <div className="grid grid-cols-3 gap-3 sm:gap-4 pt-6 max-w-2xl">
-            <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-xs text-left">
-              <span className="text-2xl sm:text-4xl font-black text-teal-800 block leading-none">15 Min</span>
-              <span className="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-wider block mt-2">Fast Dispatch</span>
-            </div>
-            <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-xs text-left">
-              <span className="text-2xl sm:text-4xl font-black text-emerald-700 block leading-none">10,000+</span>
-              <span className="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-wider block mt-2">Patients Cared</span>
-            </div>
-            <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-xs text-left">
-              <span className="text-2xl sm:text-4xl font-black text-amber-600 block leading-none">4.9 ★</span>
-              <span className="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-wider block mt-2">Patient Rating</span>
-            </div>
-          </div>
-
+        {/* Ambient colour field — gives the glass something to refract */}
+        <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
+          <div className="absolute inset-0 bg-[#f6f7f9]" />
+          <div className="absolute -top-32 -left-24 w-[34rem] h-[34rem] rounded-full bg-[radial-gradient(closest-side,rgba(16,185,129,0.20),transparent)]" />
+          <div className="absolute top-[18%] -right-40 w-[38rem] h-[38rem] rounded-full bg-[radial-gradient(closest-side,rgba(56,189,248,0.18),transparent)]" />
+          <div className="absolute bottom-[-12rem] left-[10%] w-[40rem] h-[40rem] rounded-full bg-[radial-gradient(closest-side,rgba(244,114,182,0.12),transparent)]" />
         </div>
 
-      </section>
+        {/* ========================================================
+            1. HERO
+        ======================================================== */}
+        <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-4 sm:pt-10 lg:pt-14 pb-12 sm:pb-20">
+          <div className="max-w-4xl">
 
-      {/* ========================================================
-          2. SERVICES CATALOG (CLEAN, ELEVATED & INFORMATIVE)
-      ======================================================== */}
-      <section className="py-8 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-left">
-        
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 sm:mb-12">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-teal-50 text-teal-800 border border-teal-200 text-xs font-bold uppercase tracking-widest">
-              <Sparkles className="w-3.5 h-3.5 text-teal-700" />
-              Specialized Medical Services
-            </div>
-            <h2 className="text-2xl sm:text-4xl font-black text-slate-950 tracking-tight">
-              Clinical Care Services in Nizamabad
-            </h2>
-            <p className="text-slate-600 text-xs sm:text-base max-w-xl">
-              Select your requirement. Our medical team will coordinate bedside arrival and hospital-grade setups.
-            </p>
-          </div>
-
-          <Link
-            to="/services"
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-teal-800 hover:text-teal-900 uppercase tracking-wider transition-colors shrink-0"
-          >
-            <span>Explore All Treatments</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        {/* 3-Column Service Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {LUXURY_SERVICES.map((serv) => {
-            const Icon = serv.icon;
-            return (
-              <div 
-                key={serv.id}
-                className="bg-white rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-teal-400 transition-all duration-300 overflow-hidden flex flex-col justify-between group cursor-pointer"
-                onClick={() => handleBookService(serv.title)}
+            <div className="text-left">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: EASE_OUT }}
+                className="liquid-glass inline-flex items-center gap-2.5 pl-2.5 pr-4 py-1.5 rounded-full text-[12px] sm:text-[13px] font-semibold text-slate-700"
               >
-                <div>
-                  {/* Photo Banner with Clean Gradient Overlay */}
-                  <div className="relative h-56 sm:h-64 w-full overflow-hidden bg-slate-100">
-                    <img 
-                      src={serv.image} 
-                      alt={serv.title}
-                      loading="lazy"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="anim-live-pulse absolute inset-0 rounded-full bg-emerald-500" />
+                  <span className="relative h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                </span>
+                <span><span className="font-extrabold text-slate-950">Live in Nizamabad</span> · 15-min response</span>
+              </motion.div>
+
+              <motion.h1
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: EASE_OUT, delay: 0.05 }}
+                className="mt-5 sm:mt-7 text-[2.65rem] leading-[1.02] sm:text-6xl lg:text-[4.6rem] font-black text-slate-950 tracking-[-0.04em]"
+              >
+                Hospital-grade care,{' '}
+                <span className="block italic font-normal tracking-[-0.02em] text-slate-700" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  right at home.
+                </span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: EASE_OUT, delay: 0.12 }}
+                className="mt-5 text-slate-600 text-[15px] sm:text-lg leading-relaxed max-w-xl"
+              >
+                Certified doctors, 24/7 ICU bedside nurses, emergency ambulances and complete home ICU setups — with zero advance payment.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: EASE_OUT, delay: 0.18 }}
+                className="mt-7 flex flex-col sm:flex-row gap-3"
+              >
+                <Link
+                  to="/book"
+                  className="btn-liquid-ink group h-14 pl-6 pr-2 rounded-full flex items-center justify-between sm:justify-center gap-4 text-[15px] font-bold active:scale-[0.98] transition-transform"
+                >
+                  <span>Book a home visit</span>
+                  <span className="h-10 w-10 rounded-full bg-white text-slate-950 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
+                    <ArrowRight className="w-4 h-4" />
+                  </span>
+                </Link>
+
+                <a
+                  href={`tel:${cleanPhone}`}
+                  className="liquid-glass h-14 pl-2 pr-6 rounded-full flex items-center gap-3 text-[15px] font-bold text-slate-900 active:scale-[0.98] transition-transform"
+                >
+                  <span className="h-10 w-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]">
+                    <PhoneCall className="w-4 h-4" />
+                  </span>
+                  <span className="flex flex-col leading-tight text-left">
+                    <span className="text-[11px] font-semibold text-slate-500">24/7 Helpline</span>
+                    <span>{phone}</span>
+                  </span>
+                </a>
+              </motion.div>
+
+              {/* Trust row */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="mt-7 flex items-center gap-3"
+              >
+                <div className="flex -space-x-2.5">
+                  {FALLBACK_DOCTORS.map((d) => (
+                    <img
+                      key={d._id}
+                      src={d.image}
+                      alt=""
+                      className="h-9 w-9 rounded-full object-cover ring-2 ring-white"
                     />
-                    
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent" />
+                  ))}
+                </div>
+                <div className="text-[13px] leading-tight">
+                  <div className="flex items-center gap-1 font-extrabold text-slate-950">
+                    4.9
+                    <span className="flex">
+                      {[0, 1, 2, 3, 4].map(i => <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />)}
+                    </span>
+                  </div>
+                  <div className="text-slate-500 font-medium">Trusted by 10,000+ Nizamabad families</div>
+                </div>
+              </motion.div>
 
-                    {/* Top Floating Badges */}
-                    <div className="absolute top-4 left-4">
-                      <span className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm border ${serv.badgeStyle}`}>
-                        {serv.badge}
-                      </span>
-                    </div>
+              {/* Key numbers */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: EASE_OUT, delay: 0.35 }}
+                className="liquid-glass mt-9 sm:mt-12 rounded-[1.5rem] grid grid-cols-3 divide-x divide-slate-900/[0.07] py-4 sm:py-5 max-w-2xl"
+              >
+                {[
+                  { value: '15 min', label: 'Dispatch' },
+                  { value: '10k+', label: 'Patients' },
+                  { value: '24/7', label: 'Standby' }
+                ].map(s => (
+                  <div key={s.label} className="px-2 text-center">
+                    <div className="text-xl sm:text-3xl font-black tracking-tight leading-none text-slate-950">{s.value}</div>
+                    <div className="mt-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">{s.label}</div>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
 
-                    <div className="absolute top-4 right-4">
-                      <div className="w-10 h-10 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200 flex items-center justify-center text-teal-800 shadow-md group-hover:scale-110 transition-transform">
-                        <Icon className="w-5 h-5" />
-                      </div>
-                    </div>
+          </div>
+        </section>
+
+        {/* ========================================================
+            2. SERVICES
+        ======================================================== */}
+        <section className="py-10 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-left">
+          <Reveal>
+            <SectionHeader
+              eyebrow="Specialized Medical Services"
+              title="Clinical care services in Nizamabad"
+              desc="Choose what you need. Our medical team coordinates bedside arrival and hospital-grade setups."
+              link={{ to: '/services', label: 'All treatments' }}
+            />
+          </Reveal>
+
+          <SnapRail className="md:grid-cols-2 lg:grid-cols-3">
+            {LUXURY_SERVICES.map((serv) => {
+              const Icon = serv.icon;
+              return (
+                <button
+                  type="button"
+                  key={serv.id}
+                  onClick={() => handleBookService(serv.title)}
+                  className="snap-start shrink-0 w-[82%] sm:w-[58%] md:w-auto relative h-[440px] sm:h-[460px] rounded-[1.75rem] overflow-hidden text-left group shadow-[0_20px_40px_-20px_rgba(15,23,42,0.4)] active:scale-[0.99] transition-transform"
+                  aria-label={`Book ${serv.title}`}
+                >
+                  <img
+                    src={serv.image}
+                    alt={serv.title}
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1.2s] ease-out"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/15 to-slate-950/10" />
+
+                  <div className="absolute top-4 left-4 right-4 flex items-start justify-between">
+                    <span className={`liquid-glass-clear px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${serv.emergency ? '!bg-rose-500/70 !border-rose-200/40' : ''}`}>
+                      {serv.badge}
+                    </span>
+                    <span className="liquid-glass-clear h-11 w-11 rounded-full flex items-center justify-center group-hover:rotate-6 transition-transform">
+                      <Icon className="w-5 h-5" />
+                    </span>
                   </div>
 
-                  {/* Card Body */}
-                  <div className="p-6 sm:p-7 space-y-3">
-                    <h3 className="text-xl font-black text-slate-950 group-hover:text-teal-800 transition-colors leading-tight">
+                  <div className="liquid-glass-clear absolute bottom-3 left-3 right-3 rounded-[1.35rem] p-4 sm:p-5">
+                    <h3 className="text-lg sm:text-xl font-black text-white leading-tight tracking-tight">
                       {serv.title}
                     </h3>
-                    <p className="text-slate-600 text-xs sm:text-sm leading-relaxed font-normal">
+                    <p className="mt-1.5 text-white/80 text-[13px] leading-relaxed line-clamp-2">
                       {serv.desc}
                     </p>
-
-                    <div className="flex flex-wrap gap-2 pt-1">
+                    <div className="mt-3 flex flex-wrap gap-1.5">
                       {serv.tags.map(tag => (
-                        <span key={tag} className="text-[11px] font-semibold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200/60">
+                        <span key={tag} className="text-[11px] font-semibold text-white/90 bg-white/10 border border-white/15 px-2 py-0.5 rounded-full">
                           {tag}
                         </span>
                       ))}
                     </div>
+                    <div className="mt-4 flex items-center justify-between">
+                      <span className="text-[13px] font-bold text-white">Book appointment</span>
+                      <span className="h-9 w-9 rounded-full bg-white text-slate-950 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
+                        <ArrowRight className="w-4 h-4" />
+                      </span>
+                    </div>
                   </div>
+                </button>
+              );
+            })}
+          </SnapRail>
+        </section>
+
+        {/* ========================================================
+            3. EMERGENCY AMBULANCE BANNER
+        ======================================================== */}
+        <section className="py-6 sm:py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+          <Reveal>
+            <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-rose-600 via-rose-600 to-red-700 text-white p-6 sm:p-10 shadow-[0_30px_60px_-25px_rgba(225,29,72,0.6)]">
+              <div aria-hidden="true" className="absolute -top-24 -right-16 h-72 w-72 rounded-full bg-white/15 blur-2xl" />
+              <div aria-hidden="true" className="absolute -bottom-28 left-10 h-64 w-64 rounded-full bg-orange-300/25 blur-3xl" />
+
+              <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-3 max-w-2xl">
+                  <div className="liquid-glass-clear inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider">
+                    <Truck className="w-3.5 h-3.5" />
+                    24/7 Emergency Response
+                  </div>
+                  <h3 className="text-[1.65rem] sm:text-4xl font-black text-white tracking-[-0.03em] leading-[1.1]">
+                    Need an ICU ambulance in Nizamabad?
+                  </h3>
+                  <p className="text-rose-50/90 text-[15px] sm:text-base leading-relaxed">
+                    Invasive ICU ventilators, multipara monitors, oxygen manifolds and trained emergency paramedics.
+                  </p>
                 </div>
 
-                {/* Card Action Button */}
-                <div className="p-6 sm:p-7 pt-0">
-                  <button
-                    type="button"
-                    className="w-full py-3.5 bg-slate-100 group-hover:bg-teal-800 group-hover:text-white text-slate-800 font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-200"
-                  >
-                    <span>Book Appointment</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-
+                <a
+                  href={`tel:${cleanPhone}`}
+                  className="shrink-0 h-14 pl-2 pr-6 rounded-full bg-white text-rose-700 flex items-center justify-center md:justify-start gap-3 font-black text-[15px] shadow-[inset_0_-2px_0_rgba(0,0,0,0.06),0_14px_30px_-10px_rgba(0,0,0,0.35)] active:scale-[0.98] transition-transform"
+                >
+                  <span className="relative h-10 w-10 rounded-full bg-rose-600 text-white flex items-center justify-center">
+                    <span className="anim-live-pulse absolute inset-0 rounded-full bg-rose-500" />
+                    <PhoneCall className="relative w-4 h-4" />
+                  </span>
+                  <span>Call {phone}</span>
+                </a>
               </div>
-            );
-          })}
-        </div>
-
-      </section>
-
-      {/* ========================================================
-          3. 24/7 EMERGENCY AMBULANCE BANNER (HIGH-CONTRAST RED)
-      ======================================================== */}
-      <section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="p-6 sm:p-10 rounded-3xl relative overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-rose-700 text-white text-left flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl border border-rose-400/40">
-          
-          <div className="space-y-3 max-w-2xl relative z-10">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/20 text-white text-xs font-bold uppercase tracking-wider border border-white/30">
-              <Truck className="w-4 h-4 text-white" />
-              <span>24/7 Rapid Emergency Response</span>
             </div>
+          </Reveal>
+        </section>
 
-            <h3 className="text-2xl sm:text-4xl font-black text-white tracking-tight leading-tight">
-              Need an Emergency ICU Ambulance in Nizamabad?
-            </h3>
-            
-            <p className="text-rose-100 text-xs sm:text-base leading-relaxed">
-              Equipped with invasive ICU ventilators, multipara monitors, oxygen manifolds, and trained emergency clinical paramedics.
-            </p>
-          </div>
+        {/* ========================================================
+            4. DOCTORS
+        ======================================================== */}
+        <section className="py-10 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-left">
+          <Reveal>
+            <SectionHeader
+              eyebrow="Verified Board Specialists"
+              title="Experienced home physicians"
+              desc="Senior consultants and ICU doctors available for bedside visits across Nizamabad."
+              link={{ to: '/about', label: 'All doctors' }}
+            />
+          </Reveal>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 relative z-10">
-            <a
-              href={`tel:${cleanPhone}`}
-              className="px-8 py-4 bg-white hover:bg-rose-50 active:scale-[0.98] text-rose-700 font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl flex items-center justify-center gap-2.5 transition-all cursor-pointer"
-            >
-              <PhoneCall className="w-5 h-5 text-rose-600 animate-bounce" />
-              <span>Call Emergency: {phone}</span>
-            </a>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ========================================================
-          4. TOP VERIFIED DOCTORS (PROFESSIONAL SHOWCASE)
-      ======================================================== */}
-      <section className="py-8 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-left">
-        
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 sm:mb-12">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-teal-50 text-teal-800 border border-teal-200 text-xs font-bold uppercase tracking-widest">
-              <UserCheck className="w-3.5 h-3.5 text-teal-700" />
-              Verified Board Specialists
-            </div>
-            <h2 className="text-2xl sm:text-4xl font-black text-slate-950 tracking-tight">
-              Experienced Home Physicians
-            </h2>
-            <p className="text-slate-600 text-xs sm:text-base max-w-xl">
-              Senior consultants and ICU doctors available for bedside visits and clinical evaluation across Nizamabad.
-            </p>
-          </div>
-
-          <Link
-            to="/about"
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-teal-800 hover:text-teal-900 uppercase tracking-wider transition-colors shrink-0"
-          >
-            <span>View All Doctors</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        {/* Doctor Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {displayDoctors.map((doc) => (
-            <div
-              key={doc._id || doc.name}
-              className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 flex flex-col justify-between shadow-sm hover:shadow-lg transition-all"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm shrink-0">
-                    <img
-                      src={resolveImageUrl(doc.image || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400')}
-                      alt={doc.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
+          <SnapRail className="md:grid-cols-3">
+            {displayDoctors.map((doc) => (
+              <div
+                key={doc._id || doc.name}
+                className="liquid-glass snap-start shrink-0 w-[85%] sm:w-[60%] md:w-auto rounded-[1.75rem] p-5 sm:p-6 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-start gap-4">
+                    <div className="relative shrink-0">
+                      <img
+                        src={resolveImageUrl(doc.image || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400')}
+                        alt={doc.name}
+                        loading="lazy"
+                        className="w-[72px] h-[72px] rounded-2xl object-cover ring-1 ring-white shadow-md"
+                      />
+                      <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 ring-[3px] ring-white" title="On duty" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-[0.14em]">On duty</span>
+                      <h4 className="text-[17px] font-black text-slate-950 leading-tight mt-0.5">{doc.name}</h4>
+                      <p className="text-[13px] font-semibold text-slate-600 mt-1 leading-snug">{doc.specialty}</p>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                      On-Duty
-                    </span>
-                    <h4 className="text-base sm:text-lg font-black text-slate-950 mt-1 leading-tight">
-                      {doc.name}
+
+                  <div className="mt-5 grid grid-cols-2 gap-2">
+                    <div className="rounded-xl bg-white/60 border border-white/80 px-3 py-2.5">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Qualification</div>
+                      <div className="text-[12px] font-bold text-slate-800 mt-0.5 leading-snug">{doc.qualifications}</div>
+                    </div>
+                    <div className="rounded-xl bg-white/60 border border-white/80 px-3 py-2.5">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Experience</div>
+                      <div className="text-[12px] font-bold text-slate-800 mt-0.5 leading-snug">{doc.experience}</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-2 rounded-xl bg-white/60 border border-white/80 px-3 py-2.5 text-[12px] text-slate-700 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-slate-500 shrink-0" />
+                    <span className="truncate font-semibold">{doc.availability}</span>
+                  </div>
+                </div>
+
+                <Link
+                  to="/book"
+                  state={{ selectService: 'Doctor Consultation' }}
+                  className="btn-liquid-ink mt-5 h-12 rounded-full flex items-center justify-center gap-2 text-[14px] font-bold active:scale-[0.98] transition-transform"
+                >
+                  <span>Book home visit</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            ))}
+          </SnapRail>
+        </section>
+
+        {/* ========================================================
+            5. VALUE PILLARS
+        ======================================================== */}
+        <section className="py-10 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-left">
+          <Reveal>
+            <SectionHeader eyebrow="Safety & Quality Rigor" title="Why Nizamabad families trust us" />
+          </Reveal>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+            {LUXURY_PILLARS.map((pillar, i) => {
+              const Icon = pillar.icon;
+              return (
+                <Reveal key={pillar.title} delay={i * 0.06}>
+                  <div className="liquid-glass h-full rounded-[1.5rem] p-4 sm:p-6">
+                    <div className="btn-liquid-ink h-11 w-11 sm:h-12 sm:w-12 rounded-2xl flex items-center justify-center">
+                      <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </div>
+                    <h4 className="mt-4 text-[15px] sm:text-base font-black text-slate-950 leading-tight">
+                      {pillar.title}
                     </h4>
-                    <p className="text-xs font-bold text-teal-800 mt-0.5">
-                      {doc.specialty}
+                    <p className="mt-1.5 text-[13px] sm:text-sm text-slate-600 leading-relaxed">
+                      {pillar.desc}
                     </p>
                   </div>
+                </Reveal>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ========================================================
+            6. NIZAMABAD COVERAGE (LOCAL SEO)
+        ======================================================== */}
+        <section className="py-10 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-left">
+          <Reveal>
+            <div className="relative overflow-hidden rounded-[2rem] bg-[#0a0a0c] text-white p-6 sm:p-12 shadow-[0_40px_80px_-30px_rgba(2,6,23,0.7)]">
+              <div aria-hidden="true" className="absolute -top-32 -right-24 h-96 w-96 rounded-full bg-emerald-500/20 blur-3xl" />
+              <div aria-hidden="true" className="absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-sky-500/15 blur-3xl" />
+
+              <div className="relative space-y-7">
+                <div className="space-y-3 max-w-3xl">
+                  <Eyebrow tone="dark">
+                    <MapPin className="w-3.5 h-3.5" />
+                    Nizamabad & Northern Telangana
+                  </Eyebrow>
+                  <h2 className="text-[1.75rem] leading-[1.1] sm:text-4xl font-black text-white tracking-[-0.03em]">
+                    24/7 home healthcare across Nizamabad District
+                  </h2>
+                  <p className="text-slate-300 text-[15px] sm:text-base leading-relaxed">
+                    Whether you need an emergency home ICU setup in Kanteshwar, a 24-hour bedside nurse in Subhash Nagar, or doctor visits in Armoor and Bodhan, our clinical network reaches your doorstep within 15 to 30 minutes.
+                  </p>
                 </div>
 
-                <div className="text-xs text-slate-600 font-semibold">
-                  {doc.qualifications} • {doc.experience}
-                </div>
+                <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+                  {LOCALITIES.map((loc) => (
+                    <li key={loc.name} className="liquid-glass-dark rounded-2xl px-3.5 py-3">
+                      <div className="text-white font-bold text-[13px] sm:text-sm">{loc.name}</div>
+                      <div className="text-emerald-300 text-[11px] font-semibold mt-1 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        {loc.tag}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
 
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs text-slate-600 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-teal-700 shrink-0" />
-                  <span className="truncate font-medium">{doc.availability}</span>
+                <div className="border-t border-white/10 pt-6">
+                  <div className="text-white/90 font-bold text-[11px] uppercase tracking-[0.16em] mb-3">Top services in Nizamabad</div>
+                  <div className="flex flex-wrap gap-2">
+                    {SEO_KEYWORDS.map(k => (
+                      <span key={k} className="liquid-glass-dark px-3 py-1.5 rounded-full text-[12px] text-slate-200 font-medium">{k}</span>
+                    ))}
+                  </div>
                 </div>
               </div>
-
-              <Link
-                to="/book"
-                state={{ selectService: 'Doctor Consultation' }}
-                className="mt-6 w-full py-3 bg-teal-800 hover:bg-teal-900 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 shadow-xs"
-              >
-                <span>Book Home Visit</span>
-                <ArrowRight className="w-4 h-4 text-teal-200" />
-              </Link>
             </div>
-          ))}
-        </div>
+          </Reveal>
+        </section>
 
-      </section>
+        {/* ========================================================
+            7. FAQ
+        ======================================================== */}
+        <section className="py-10 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto text-left">
+          <Reveal>
+            <SectionHeader eyebrow="Got questions?" title="Frequently asked questions" />
+          </Reveal>
 
-      {/* ========================================================
-          5. CLINICAL RIGOR (4 VALUE PILLARS)
-      ======================================================== */}
-      <section className="py-8 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-left">
-        
-        <div className="max-w-2xl mb-8 sm:mb-12 space-y-2">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold uppercase tracking-widest">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-            Safety & Quality Rigor
-          </div>
-          <h2 className="text-2xl sm:text-4xl font-black text-slate-950 tracking-tight">
-            Why Nizamabad Families Trust Us
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {LUXURY_PILLARS.map((pillar) => {
-            const Icon = pillar.icon;
-            return (
-              <div 
-                key={pillar.title}
-                className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 space-y-3 text-left shadow-xs hover:shadow-md transition-shadow"
-              >
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${pillar.iconBg}`}>
-                  <Icon className="w-6 h-6" />
+          <div className="space-y-3">
+            {displayFaqs.map((faq, idx) => {
+              const isOpen = openFaqIdx === idx;
+              const questionText = faq.q || faq.question;
+              const answerText = faq.a || faq.answer;
+              const panelId = `faq-panel-${idx}`;
+              return (
+                <div key={idx} className={`liquid-glass rounded-[1.35rem] transition-shadow ${isOpen ? 'shadow-lg' : ''}`}>
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaqIdx(isOpen ? null : idx)}
+                    aria-expanded={isOpen}
+                    aria-controls={panelId}
+                    className="w-full px-5 py-4 sm:px-6 sm:py-5 text-left flex items-center justify-between gap-4 font-bold text-[15px] sm:text-base text-slate-950 cursor-pointer"
+                  >
+                    <span>{questionText}</span>
+                    <span className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${isOpen ? 'btn-liquid-ink rotate-45' : 'bg-white/70 border border-white text-slate-700'}`}>
+                      <Plus className="w-4 h-4" />
+                    </span>
+                  </button>
+                  <div
+                    id={panelId}
+                    role="region"
+                    className={`grid transition-[grid-template-rows] duration-300 ease-out ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
+                  >
+                    <div className="overflow-hidden">
+                      <p className="px-5 sm:px-6 pb-5 text-[14px] sm:text-[15px] text-slate-600 leading-relaxed">
+                        {answerText}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <h4 className="text-base font-black text-slate-950">
-                  {pillar.title}
-                </h4>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                  {pillar.desc}
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ========================================================
+            8. FINAL CTA
+        ======================================================== */}
+        <section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+          <Reveal>
+            <div className="relative">
+              {/* Colour behind the glass */}
+              <div aria-hidden="true" className="absolute inset-0 overflow-hidden rounded-[2rem]">
+                <div className="absolute -top-10 left-[8%] h-56 w-56 rounded-full bg-emerald-400/45 blur-3xl" />
+                <div className="absolute -bottom-12 right-[6%] h-64 w-64 rounded-full bg-sky-400/40 blur-3xl" />
+                <div className="absolute top-1/3 left-1/2 h-40 w-40 rounded-full bg-fuchsia-300/30 blur-3xl" />
+              </div>
+
+              <div className="liquid-glass relative rounded-[2rem] px-6 py-10 sm:p-14 text-center">
+                <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-600">
+                  <span className="relative flex h-2 w-2">
+                    <span className="anim-live-pulse absolute inset-0 rounded-full bg-emerald-500" />
+                    <span className="relative h-2 w-2 rounded-full bg-emerald-500" />
+                  </span>
+                  24/7 clinical standby
+                </span>
+                <h3 className="mt-4 text-[1.9rem] sm:text-5xl font-black text-slate-950 tracking-[-0.035em] leading-[1.05]">
+                  Need medical help{' '}
+                  <span className="italic font-normal" style={{ fontFamily: "'Playfair Display', serif" }}>right now?</span>
+                </h3>
+                <p className="mt-4 text-slate-600 text-[15px] sm:text-base max-w-lg mx-auto leading-relaxed">
+                  Submit your care request online or speak with our clinical coordinator directly on WhatsApp.
                 </p>
-              </div>
-            );
-          })}
-        </div>
 
-      </section>
-
-      {/* ========================================================
-          6. NIZAMABAD DISTRICT COVERAGE & LOCAL SEO SECTION
-      ======================================================== */}
-      <section className="py-8 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-left">
-        <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-black text-white rounded-3xl p-8 sm:p-12 border border-slate-800 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="relative z-10 space-y-8">
-            <div className="space-y-3 max-w-3xl">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 text-emerald-300 border border-white/10 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
-                <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-                Nizamabad & Northern Telangana Coverage
-              </div>
-              <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
-                24/7 Home Healthcare Delivered Across Nizamabad District
-              </h2>
-              <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                Whether you need an emergency home ICU setup in Kanteshwar, a 24-hour bedside nurse in Subhash Nagar, or doctor visits in Armoor and Bodhan, our clinical network reaches your doorstep within 15 to 30 minutes.
-              </p>
-            </div>
-
-            {/* Localities Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 pt-2">
-              {[
-                { name: 'Kanteshwar', tag: 'Fast Dispatch' },
-                { name: 'Subhash Nagar', tag: '24/7 Nursing' },
-                { name: 'Pragathi Nagar', tag: 'Home Visits' },
-                { name: 'Vinayak Nagar', tag: 'ICU Care' },
-                { name: 'Khaleelwadi', tag: 'Lab Tests' },
-                { name: 'Mubaraknagar', tag: 'Care Takers' },
-                { name: 'Madhavnagar', tag: 'Physiotherapy' },
-                { name: 'Shivaji Nagar', tag: 'Elder Care' },
-                { name: 'Armoor Hub', tag: 'Doctor Visits' },
-                { name: 'Bodhan City', tag: 'ICU Setup' },
-                { name: 'Kamareddy', tag: 'Ambulance' },
-                { name: 'Banswada', tag: 'Medical Eqpt' }
-              ].map((loc, i) => (
-                <div key={i} className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-3.5 transition-all">
-                  <div className="text-white font-bold text-xs sm:text-sm">{loc.name}</div>
-                  <div className="text-emerald-400 text-[10px] font-semibold mt-1 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    <span>{loc.tag}</span>
-                  </div>
+                <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 max-w-md mx-auto">
+                  <Link
+                    to="/book"
+                    className="btn-liquid-ink h-14 px-7 rounded-full flex items-center justify-center gap-2 text-[15px] font-bold active:scale-[0.98] transition-transform"
+                  >
+                    <HeartPulse className="w-5 h-5 text-rose-300" />
+                    <span>Book care now</span>
+                  </Link>
+                  <a
+                    href={`https://wa.me/${cleanWhatsapp}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="h-14 px-7 rounded-full flex items-center justify-center gap-2 text-[15px] font-bold text-white bg-gradient-to-b from-emerald-500 to-emerald-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_10px_24px_-8px_rgba(5,150,105,0.6)] active:scale-[0.98] transition-transform"
+                  >
+                    <MessageSquare className="w-5 h-5" />
+                    <span>Chat on WhatsApp</span>
+                  </a>
                 </div>
-              ))}
-            </div>
-
-            {/* SEO Keywords Highlight Bar */}
-            <div className="border-t border-white/10 pt-6 flex flex-wrap items-center gap-2 text-slate-300 text-xs font-medium">
-              <span className="text-white font-bold text-xs uppercase tracking-wider">Top Services in Nizamabad:</span>
-              <span className="bg-white/10 px-3 py-1 rounded-full text-slate-200">#1 Home Nursing Care</span>
-              <span className="bg-white/10 px-3 py-1 rounded-full text-slate-200">Home ICU Setup</span>
-              <span className="bg-white/10 px-3 py-1 rounded-full text-slate-200">Doctor Consultation at Home</span>
-              <span className="bg-white/10 px-3 py-1 rounded-full text-slate-200">Elderly & Bedridden Care</span>
-              <span className="bg-white/10 px-3 py-1 rounded-full text-slate-200">Physiotherapy</span>
-              <span className="bg-white/10 px-3 py-1 rounded-full text-slate-200">Oxygen Concentrator Rental</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ========================================================
-          7. FAQ ACCORDION (COLLAPSIBLES)
-      ======================================================== */}
-      <section className="py-8 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto text-left">
-        
-        <div className="mb-8 space-y-2">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-200 text-xs font-bold uppercase tracking-widest">
-            <HelpCircle className="w-3.5 h-3.5 text-slate-700" />
-            Got Questions?
-          </div>
-          <h2 className="text-2xl sm:text-4xl font-black text-slate-950 tracking-tight">
-            Frequently Asked Questions
-          </h2>
-        </div>
-
-        <div className="space-y-3">
-          {displayFaqs.map((faq, idx) => {
-            const isOpen = openFaqIdx === idx;
-            const questionText = faq.q || faq.question;
-            const answerText = faq.a || faq.answer;
-            return (
-              <div 
-                key={idx}
-                className="bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all shadow-xs"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenFaqIdx(isOpen ? null : idx)}
-                  className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 font-bold text-sm sm:text-base text-slate-900 hover:text-black transition-colors cursor-pointer"
-                >
-                  <span>{questionText}</span>
-                  <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 shrink-0 ${isOpen ? 'rotate-180 text-slate-900' : ''}`} />
-                </button>
-                {isOpen && (
-                  <div className="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3 font-medium">
-                    {answerText}
-                  </div>
-                )}
               </div>
-            );
-          })}
-        </div>
+            </div>
+          </Reveal>
+        </section>
 
-      </section>
-
-      {/* ========================================================
-          8. CALL TO ACTION BANNER (OBSIDIAN LUXURY)
-      ======================================================== */}
-      <section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
-        <div className="bg-white rounded-3xl p-8 sm:p-14 text-center space-y-6 border border-slate-200 shadow-lg">
-          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-100 text-slate-900 text-xs font-bold uppercase tracking-widest border border-slate-200">
-            24/7 Clinical Standby Across Nizamabad
-          </span>
-          <h3 className="text-2xl sm:text-5xl font-black text-slate-950 tracking-tight leading-tight">
-            Need Medical Assistance Right Now?
-          </h3>
-          <p className="text-slate-600 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-            Submit your care request online or speak with our clinical coordinator directly on WhatsApp.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4 pt-2 max-w-md mx-auto">
-            <Link
-              to="/book"
-              className="px-8 py-4 bg-slate-950 hover:bg-black text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider rounded-full shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-            >
-              <HeartPulse className="w-5 h-5 text-rose-400" />
-              <span>Book Care Now</span>
-            </Link>
-
-            <a
-              href={`https://wa.me/${cleanWhatsapp}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider rounded-full shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-            >
-              <MessageSquare className="w-5 h-5 text-white" />
-              <span>Chat on WhatsApp</span>
-            </a>
-          </div>
-        </div>
-      </section>
-
-    </div>
+      </div>
+    </MotionConfig>
   );
 };
 

@@ -4,7 +4,7 @@ import { ArrowUp, X, Send, CheckCircle2, AlertCircle, MessageSquare, Mic, MicOff
 import { bookingsAPI } from '../services/api';
 import { mockDb } from '../utils/mockDb';
 
-const FloatingButtons = ({ contactSettings }) => {
+const FloatingButtons = ({ contactSettings, hideOnMobile = false }) => {
   const [showScroll, setShowScroll] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [inputText, setInputText] = useState('');
@@ -771,7 +771,7 @@ const FloatingButtons = ({ contactSettings }) => {
   };
 
   return (
-    <div className="fixed bottom-5 right-4 sm:right-6 z-50 flex flex-col gap-3 no-print items-end select-none pointer-events-none">
+    <div className={`fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-5 right-4 sm:right-6 z-50 flex-col gap-3 no-print items-end select-none pointer-events-none ${hideOnMobile ? 'hidden md:flex' : 'flex'}`}>
       
       {/* Interactive Voice-Enabled Chatbot Window */}
       {isChatOpen && (
@@ -937,7 +937,7 @@ const FloatingButtons = ({ contactSettings }) => {
       <button
         onClick={scrollToTop}
         id="back-to-top"
-        className={`w-14 h-14 bg-slate-800 hover:bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg transition-all duration-500 active:scale-95 group cursor-pointer pointer-events-auto ${
+        className={`max-md:hidden w-14 h-14 bg-slate-800 hover:bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg transition-all duration-500 active:scale-95 group cursor-pointer pointer-events-auto ${
           showScroll ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
         }`}
         title="Scroll to Top"

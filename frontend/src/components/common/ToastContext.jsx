@@ -45,7 +45,7 @@ export const ToastProvider = ({ children }) => {
       {children}
       
       {/* Toast Overlay Container */}
-      <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 max-w-sm w-full no-print">
+      <div className="fixed left-4 right-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] sm:left-auto sm:right-6 sm:bottom-6 sm:w-full sm:max-w-sm z-[9999] flex flex-col gap-3 no-print pointer-events-none [&>*]:pointer-events-auto">
         <AnimatePresence>
           {toasts.map((toast) => (
             <motion.div
