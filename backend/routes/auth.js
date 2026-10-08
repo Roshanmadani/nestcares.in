@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const dbHelper = require('../utils/dbHelper');
-const { protect } = require('../middleware/auth');
+const { protect, BUILT_IN_ADMIN_ID } = require('../middleware/auth');
 const { sendEmail } = require('../utils/email');
 
 // @desc    Auth admin & get token
@@ -51,7 +51,7 @@ router.post('/login', async (req, res) => {
         isMatch = true;
         if (!user) {
           user = {
-            _id: '6a4d42c13fe3185756e53aef',
+            _id: BUILT_IN_ADMIN_ID,
             name: 'Super Admin',
             email: cleanEmail,
             role: 'admin'

@@ -41,6 +41,17 @@ const Login = () => {
     }
   }, []);
 
+  // Explain why the admin was sent back here, if the server rejected the session
+  useEffect(() => {
+    try {
+      const notice = sessionStorage.getItem('auth_notice');
+      if (notice) {
+        setError(notice);
+        sessionStorage.removeItem('auth_notice');
+      }
+    } catch (e) { /* storage unavailable */ }
+  }, []);
+
   // Auth redirects
   useEffect(() => {
     if (user) {

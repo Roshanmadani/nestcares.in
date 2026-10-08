@@ -31,8 +31,15 @@ export const AuthProvider = ({ children }) => {
 
   // Any authenticated request that comes back 401 signs the admin out
   useEffect(() => {
-    window.addEventListener('auth:expired', logout);
-    return () => window.removeEventListener('auth:expired', logout);
+    const onExpired = () => {
+      // Shown on the login page so the sign-out isn't silent
+      try {
+        sessionStorage.setItem('auth_notice', 'Your session was not accepted by the server. Please sign in again.');
+      } catch (e) { /* storage unavailable */ }
+      logout();
+    };
+    window.addEventListener('auth:expired', onExpired);
+    return () => window.removeEventListener('auth:expired', onExpired);
   }, [logout]);
 
   const login = async (email, password) => {
