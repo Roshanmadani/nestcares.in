@@ -51,7 +51,9 @@ app.get('/api/health', (req, res) => {
     success: true,
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    dbConnected: global.dbConnected || false
+    dbConnected: global.dbConnected || false,
+    // Why the database isn't connected (credentials removed), to diagnose deployments
+    dbError: global.dbConnected ? undefined : (global.dbLastError || 'Not connected yet')
   });
 });
 

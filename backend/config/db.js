@@ -19,6 +19,10 @@ const connectDB = async () => {
     return conn;
   } catch (error) {
     console.error(`MongoDB Connection Error: ${error.message}`);
+    // Kept for /api/health; strip anything that looks like a connection string or credentials
+    global.dbLastError = String(error.message || 'Unknown error')
+      .replace(/mongodb(\+srv)?:\/\/[^\s]+/gi, 'mongodb://<hidden>')
+      .slice(0, 300);
     console.log('Server will run using JSON File Database Fallback (under backend/data/) for development stability!');
     isConnected = false;
     global.dbConnected = false;
