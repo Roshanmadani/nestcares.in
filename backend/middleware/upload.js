@@ -1,9 +1,11 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, '../uploads');
+// Ensure upload directory exists. Vercel's filesystem is read-only except the
+// temp dir, so there files are staged in /tmp before being sent to Cloudinary.
+const uploadDir = process.env.VERCEL ? os.tmpdir() : path.join(__dirname, '../uploads');
 if (!process.env.VERCEL && !fs.existsSync(uploadDir)) {
   try {
     fs.mkdirSync(uploadDir, { recursive: true });
@@ -39,7 +41,8 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+  // Vercel rejects request bodies over 4.5 MB, so stay under that there
+  limits: { fileSize: (process.env.VERCEL ? 4 : 5) * 1024 * 1024 }
 });
 
 module.exports = upload;
