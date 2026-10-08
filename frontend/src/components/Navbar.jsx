@@ -189,7 +189,7 @@ const Navbar = ({ webSettings }) => {
             {/* Glossy Pill CTA Button */}
             <Link
               to="/book"
-              className="px-4 sm:px-5 py-2 bg-slate-950 hover:bg-black active:scale-95 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-sm hover:shadow-md transition-all flex items-center gap-1.5"
+              className="hidden sm:flex px-5 py-2 bg-slate-950 hover:bg-black active:scale-95 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-sm hover:shadow-md transition-all items-center gap-1.5"
             >
               <span>{isTe ? 'బుకింగ్' : 'Book Now'}</span>
               <ArrowRight className="w-3.5 h-3.5 text-slate-300" />
@@ -312,7 +312,7 @@ const Navbar = ({ webSettings }) => {
               {/* Quick Highlight Cards */}
               <div className="pt-3 space-y-2">
                 <Link
-                  to="/services/icu-at-home"
+                  to="/services/icu-setup-at-home"
                   onClick={() => setMobileMenuOpen(false)}
                   className="block p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-left transition-all"
                 >
@@ -324,7 +324,7 @@ const Navbar = ({ webSettings }) => {
                 </Link>
 
                 <Link
-                  to="/services/nursing-care"
+                  to="/services/nursing-services"
                   onClick={() => setMobileMenuOpen(false)}
                   className="block p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-left transition-all"
                 >

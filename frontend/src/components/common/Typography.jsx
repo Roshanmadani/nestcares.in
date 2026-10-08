@@ -44,8 +44,6 @@ export const PageBanner = ({
 }) => {
   return (
     <div className={`glass-card-premium rounded-3xl p-6 sm:p-10 mb-8 relative overflow-hidden text-left border border-white/10 ${className}`} {...props}>
-      <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20"></div>
       
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center w-full relative z-10">
         <div className={`flex flex-col gap-3 ${image ? 'md:col-span-8' : 'md:col-span-12'}`}>

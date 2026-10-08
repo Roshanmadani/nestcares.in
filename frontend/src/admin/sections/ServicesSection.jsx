@@ -386,7 +386,7 @@ const ServicesSection = ({ services, loading, onChanged, onEditingChange }) => {
                   <IconButton icon={ArrowUp} label="Move up" onClick={() => move(i, -1)} disabled={i === 0} className="!h-7 disabled:opacity-25" />
                   <IconButton icon={ArrowDown} label="Move down" onClick={() => move(i, 1)} disabled={i === services.length - 1} className="!h-7 disabled:opacity-25" />
                 </div>
-                <div className={cx('h-12 w-12 sm:h-14 sm:w-20 rounded-xl overflow-hidden bg-slate-100 shrink-0', !visible && 'opacity-50 grayscale')}>
+                <div className={cx('hidden sm:block h-14 w-20 rounded-xl overflow-hidden bg-slate-100 shrink-0', !visible && 'opacity-50 grayscale')}>
                   {s.bannerImage && <img src={resolveImageUrl(s.bannerImage)} alt="" className="h-full w-full object-cover" />}
                 </div>
                 <button type="button" onClick={() => setEditing(s)} className="min-w-0 flex-1 text-left cursor-pointer">

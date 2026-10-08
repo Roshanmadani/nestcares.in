@@ -102,7 +102,6 @@ const Login = () => {
     <div className="min-h-screen bg-[#fafafb] flex items-center justify-center p-4 sm:p-6 relative overflow-hidden font-sans select-none text-slate-900">
       
       {/* Ambient background soft glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-slate-200/40 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Top Floating Return Pill */}
       <div className="absolute top-4 sm:top-6 left-4 sm:left-8 z-20">

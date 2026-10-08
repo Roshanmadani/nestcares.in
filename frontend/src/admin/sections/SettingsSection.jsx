@@ -278,14 +278,14 @@ const CloudinaryPanel = () => {
   );
 };
 
-const SettingsSection = ({ settings, onSettingsSaved }) => {
+const SettingsSection = ({ settings, settingsLoaded, onSettingsSaved }) => {
   const [group, setGroup] = useState('contact');
   const current = GROUPS.find(g => g.id === group);
 
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg sm:text-xl font-black text-slate-950 tracking-tight">Settings</h2>
+        <h2 className="max-lg:sr-only text-lg sm:text-xl font-black text-slate-950 tracking-tight">Settings</h2>
         <p className="text-[13px] text-slate-500">{current.desc}</p>
       </div>
 
@@ -305,8 +305,9 @@ const SettingsSection = ({ settings, onSettingsSaved }) => {
       </div>
 
       <Card className="p-4 sm:p-6 max-w-3xl">
-        {group === 'contact' && <ContactPanel key={JSON.stringify(settings?.contact || {})} value={settings?.contact} onSaved={onSettingsSaved} />}
-        {group === 'web' && <WebPanel key={JSON.stringify(settings?.web || {})} value={settings?.web} onSaved={onSettingsSaved} />}
+        {(group === 'contact' || group === 'web') && !settingsLoaded && <div className="h-64 rounded-2xl bg-slate-100 animate-pulse" />}
+        {group === 'contact' && settingsLoaded && <ContactPanel value={settings?.contact} onSaved={onSettingsSaved} />}
+        {group === 'web' && settingsLoaded && <WebPanel value={settings?.web} onSaved={onSettingsSaved} />}
         {group === 'email' && <EmailPanel />}
         {group === 'cloudinary' && <CloudinaryPanel />}
       </Card>

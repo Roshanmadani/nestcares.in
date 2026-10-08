@@ -14,6 +14,7 @@ import Badge from '../components/common/Badge';
 import { SectionHeading } from '../components/common/Typography';
 import PageLayout from '../components/common/PageLayout';
 import { resolveImageUrl } from '../utils/url';
+import ServiceNotFound from '../components/common/ServiceNotFound';
 
 const getSubServiceImageUrl = (name) => {
   const n = name.toLowerCase();
@@ -42,7 +43,7 @@ const getSubServiceImageUrl = (name) => {
     return 'https://images.unsplash.com/photo-1587351021759-3e566b6af7cc?auto=format&fit=crop&q=80&w=500';
   }
   if (n.includes('blood') || n.includes('test') || n.includes('laboratory') || n.includes('urine')) {
-    return 'https://images.unsplash.com/photo-1579154204601-01588f351167?auto=format&fit=crop&q=80&w=500';
+    return 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&q=80&w=500';
   }
   if (n.includes('physiotherapy') || n.includes('rehabilitation') || n.includes('mobility')) {
     return 'https://images.unsplash.com/photo-1590069261209-f8e9b8642343?auto=format&fit=crop&q=80&w=500';
@@ -61,30 +62,22 @@ const DynamicIcon = ({ name, className }) => {
 const ServiceDetail = ({ services, contactSettings }) => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const [service, setService] = useState(null);
   const [selectedImg, setSelectedImg] = useState('');
   const [activeFaq, setActiveFaq] = useState(null);
   const [activeMobileTab, setActiveMobileTab] = useState('overview');
 
+  // Derived from the URL each render so switching between services never shows stale data
+  const service = (Array.isArray(services) ? services : []).find(s => s.slug === slug) || null;
+
   useEffect(() => {
-    if (services && services.length > 0) {
-      const match = services.find(s => s.slug === slug);
-      if (match) {
-        setService(match);
-        const defaultImg = match.galleryImages?.[0] || 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=600';
-        setSelectedImg(defaultImg);
-        document.title = `${match.title} - Home Healthcare Services`;
-      }
-    }
-  }, [slug, services]);
+    if (!service) return;
+    setSelectedImg(service.galleryImages?.[0] || 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=600');
+    setActiveFaq(null);
+    document.title = `${service.title} - Home Healthcare Services`;
+  }, [service?._id, service?.slug]);
 
   if (!service) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 bg-slate-50 text-slate-550 font-sans">
-        <div className="text-sm font-semibold">Retrieving speciality detail record...</div>
-        <Link to="/services" className="btn-secondary text-xs">Back to all Services</Link>
-      </div>
-    );
+    return <ServiceNotFound phone={contactSettings?.phoneNumbers?.[0]} />;
   }
 
   const getFullImgUrl = (path) => {
@@ -98,7 +91,7 @@ const ServiceDetail = ({ services, contactSettings }) => {
     { title: 'Doctor Consultation', desc: 'Physician tele-consults & home visits.', icon: <Users className="w-5 h-5" />, slug: 'doctor-consultation' },
     { title: 'Nursing Care', desc: '24/7 bedside nursing shifts & dressings.', icon: <HeartPulse className="w-5 h-5" />, slug: 'nursing-services' },
     { title: 'ICU Setup', desc: 'Critical care hospital ventilators at home.', icon: <Activity className="w-5 h-5" />, slug: 'icu-setup-at-home' },
-    { title: 'Medical Equipment Rental', desc: 'High-quality concentrators, monitors & beds.', icon: <Sliders className="w-5 h-5" />, slug: 'medical-equipment' }
+    { title: 'Medical Equipment Rental', desc: 'High-quality concentrators, monitors & beds.', icon: <Sliders className="w-5 h-5" />, slug: 'icu-setup-at-home' }
   ];
 
   const phone = contactSettings?.phoneNumbers?.[0] || '+91 92488 49388';
@@ -146,8 +139,6 @@ const ServiceDetail = ({ services, contactSettings }) => {
         <div className="bg-gradient-to-tr from-slate-950 via-teal-950 to-slate-900 text-white rounded-3xl p-6 md:p-8 relative overflow-hidden h-auto md:h-[280px] flex items-center border border-slate-800/60 shadow-xl">
           {/* Subtle grid patterns and glossy overlay */}
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,_transparent_1px),_linear-gradient(90deg,_rgba(255,255,255,0.015)_1px,_transparent_1px)] bg-[size:30px_30px] pointer-events-none"></div>
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-teal-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-slate-500/10 rounded-full blur-[100px] pointer-events-none"></div>
           
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center w-full relative z-10">
             {/* Left Column */}
@@ -234,7 +225,7 @@ const ServiceDetail = ({ services, contactSettings }) => {
             </div>
             <div className="flex flex-col text-left">
               <span className="text-[10px] lg:text-xs text-rose-500 font-bold uppercase tracking-wider">Emergency Hotline</span>
-              <a href={`tel:${cleanPhone}`} className="text-xs lg:text-sm font-black text-rose-800 leading-tight hover:underline">
+              <a href={`tel:${cleanPhone}`} className="text-sm font-black text-rose-800 leading-tight hover:underline inline-flex items-center min-h-10">
                 {phone}
               </a>
             </div>
@@ -518,7 +509,7 @@ const ServiceDetail = ({ services, contactSettings }) => {
                         
                         <Link 
                           to={`/services/${service.slug}/${subSlug}`}
-                          className="bg-teal-800 hover:bg-teal-900 text-white text-[10px] font-extrabold uppercase py-1.5 px-4.5 rounded-full transition-all duration-300 shadow-sm hover:shadow active:scale-98 cursor-pointer text-center"
+                          className="bg-teal-800 hover:bg-teal-900 text-white text-[11px] font-extrabold uppercase min-h-10 inline-flex items-center px-5 rounded-full transition-all duration-300 shadow-sm hover:shadow active:scale-98 cursor-pointer text-center"
                         >
                           View Info
                         </Link>

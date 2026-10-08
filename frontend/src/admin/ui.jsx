@@ -59,7 +59,7 @@ export const Card = ({ className = '', children, ...props }) => (
 export const SectionTitle = ({ title, desc, action }) => (
   <div className="flex items-start justify-between gap-3 mb-4">
     <div className="min-w-0">
-      <h2 className="text-lg sm:text-xl font-black text-slate-950 tracking-tight">{title}</h2>
+      <h2 className="max-lg:sr-only text-lg sm:text-xl font-black text-slate-950 tracking-tight">{title}</h2>
       {desc && <p className="text-[13px] text-slate-500 mt-0.5">{desc}</p>}
     </div>
     {action && <div className="shrink-0">{action}</div>}
@@ -180,11 +180,15 @@ export const Sheet = ({ open, onClose, title, subtitle, children, footer, wide =
     if (!open) return;
     const onKey = (e) => e.key === 'Escape' && onClose();
     document.addEventListener('keydown', onKey);
-    const prev = document.body.style.overflow;
+    // Hiding the page scrollbar would shift the layout sideways; pad for it instead
+    const scrollbar = window.innerWidth - document.documentElement.clientWidth;
+    const prev = { overflow: document.body.style.overflow, paddingRight: document.body.style.paddingRight };
     document.body.style.overflow = 'hidden';
+    if (scrollbar > 0) document.body.style.paddingRight = `${scrollbar}px`;
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prev;
+      document.body.style.overflow = prev.overflow;
+      document.body.style.paddingRight = prev.paddingRight;
     };
   }, [open, onClose]);
 
@@ -192,10 +196,10 @@ export const Sheet = ({ open, onClose, title, subtitle, children, footer, wide =
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-6" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] animate-in fade-in" onClick={onClose} />
+      <div className="absolute inset-0 bg-slate-950/40 admin-fade-in" onClick={onClose} />
       <div
         className={cx(
-          'relative bg-white w-full max-h-[92dvh] flex flex-col rounded-t-3xl sm:rounded-3xl shadow-2xl',
+          'relative bg-white w-full max-h-[92dvh] flex flex-col rounded-t-3xl sm:rounded-3xl shadow-2xl admin-sheet-in',
           wide ? 'sm:max-w-3xl' : 'sm:max-w-lg'
         )}
       >

@@ -240,7 +240,7 @@ const BookingsSection = ({ bookings, loading, onRefresh, onBookingChanged, servi
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg sm:text-xl font-black text-slate-950 tracking-tight">Bookings</h2>
+          <h2 className="max-lg:sr-only text-lg sm:text-xl font-black text-slate-950 tracking-tight">Bookings</h2>
           <p className="text-[13px] text-slate-500">Tap a booking to call the patient or update its status.</p>
         </div>
         <div className="flex items-center gap-2">

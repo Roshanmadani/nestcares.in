@@ -11,6 +11,7 @@ import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
 import { SectionHeading } from '../components/common/Typography';
 import PageLayout from '../components/common/PageLayout';
+import ServiceNotFound from '../components/common/ServiceNotFound';
 
 const getSubServiceImageUrl = (name) => {
   const n = name.toLowerCase();
@@ -39,7 +40,7 @@ const getSubServiceImageUrl = (name) => {
     return 'https://images.unsplash.com/photo-1587351021759-3e566b6af7cc?auto=format&fit=crop&q=80&w=500';
   }
   if (n.includes('blood') || n.includes('test') || n.includes('laboratory') || n.includes('urine')) {
-    return 'https://images.unsplash.com/photo-1579154204601-01588f351167?auto=format&fit=crop&q=80&w=500';
+    return 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&q=80&w=500';
   }
   if (n.includes('physiotherapy') || n.includes('rehabilitation') || n.includes('mobility')) {
     return 'https://images.unsplash.com/photo-1590069261209-f8e9b8642343?auto=format&fit=crop&q=80&w=500';
@@ -53,33 +54,23 @@ const getSubServiceImageUrl = (name) => {
 const SubServiceDetail = ({ services, contactSettings }) => {
   const { slug, subSlug } = useParams();
   const navigate = useNavigate();
-  const [parentService, setParentService] = useState(null);
-  const [subService, setSubService] = useState(null);
   const [activeFaq, setActiveFaq] = useState(null);
 
+  // Derived from the URL each render so switching treatments never shows stale data
+  const parentService = (Array.isArray(services) ? services : []).find(s => s.slug === slug) || null;
+  const subService = parentService?.subServices?.find(
+    sub => sub?.name && sub.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') === subSlug
+  ) || null;
+
   useEffect(() => {
-    if (services && services.length > 0) {
-      const parent = services.find(s => s.slug === slug);
-      if (parent) {
-        setParentService(parent);
-        const match = parent.subServices?.find(
-          sub => sub.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') === subSlug
-        );
-        if (match) {
-          setSubService(match);
-          document.title = `${match.name} - ${parent.title} - Healthcare Services`;
-        }
-      }
+    if (parentService && subService) {
+      document.title = `${subService.name} - ${parentService.title} - Healthcare Services`;
     }
-  }, [slug, subSlug, services]);
+    setActiveFaq(null);
+  }, [slug, subSlug, parentService?.title, subService?.name]);
 
   if (!parentService || !subService) {
-    return (
-      <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 bg-slate-50 text-slate-500 font-sans">
-        <div className="text-xs font-semibold">Retrieving treatment details...</div>
-        <Link to="/services" className="btn-secondary text-[11px] py-1.5 px-3">Back to all Services</Link>
-      </div>
-    );
+    return <ServiceNotFound phone={contactSettings?.phoneNumbers?.[0]} what="treatment" />;
   }
 
   const phone = contactSettings?.phoneNumbers?.[0] || '+91 92488 49388';
@@ -93,7 +84,7 @@ const SubServiceDetail = ({ services, contactSettings }) => {
     { title: 'Doctor Consultation', desc: 'Physician tele-consults & home visits.', icon: <Users className="w-5 h-5" />, slug: 'doctor-consultation' },
     { title: 'Nursing Care', desc: '24/7 bedside nursing shifts & dressings.', icon: <HeartPulse className="w-5 h-5" />, slug: 'nursing-services' },
     { title: 'ICU Setup', desc: 'Critical care hospital ventilators at home.', icon: <Activity className="w-5 h-5" />, slug: 'icu-setup-at-home' },
-    { title: 'Medical Equipment Rental', desc: 'High-quality concentrators, monitors & beds.', icon: <Sliders className="w-5 h-5" />, slug: 'medical-equipment' }
+    { title: 'Medical Equipment Rental', desc: 'High-quality concentrators, monitors & beds.', icon: <Sliders className="w-5 h-5" />, slug: 'icu-setup-at-home' }
   ];
 
   const subServiceFaqs = parentService.faqs?.slice(0, 3) || [

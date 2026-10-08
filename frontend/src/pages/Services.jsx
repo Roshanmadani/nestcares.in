@@ -279,7 +279,7 @@ const Services = ({ services }) => {
                       <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto gap-2">
                         <Link
                           to={`/services/${service.slug}`}
-                          className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-teal-700 transition-colors inline-flex items-center gap-1 py-1.5"
+                          className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-teal-700 transition-colors inline-flex items-center gap-1 min-h-11 pr-3 -ml-1 pl-1"
                         >
                           <span>{isTe ? "వివరాలు" : "Details"}</span>
                           <ChevronRight className="w-3.5 h-3.5 text-slate-400" />

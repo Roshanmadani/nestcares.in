@@ -173,7 +173,7 @@ const DoctorsSection = ({ doctors, loading, onChanged }) => {
                 <div className="flex items-start gap-3">
                   <img
                     src={resolveImageUrl(doc.image) || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200'}
-                    alt=""
+                    alt={doc.name}
                     className={`h-14 w-14 rounded-xl object-cover bg-slate-100 shrink-0 ${active ? '' : 'grayscale opacity-60'}`}
                   />
                   <div className="min-w-0 flex-1">

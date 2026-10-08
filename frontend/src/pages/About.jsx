@@ -61,7 +61,7 @@ const About = ({ doctors, founders }) => {
       experience: '10+ Years Experience',
       regNumber: 'TSMC/2015/6321',
       bio: 'Lead intensive care specialist overseeing home ICU ventilator setups, tracheostomy tube management, and emergency clinical triage.',
-      image: 'https://images.unsplash.com/photo-1594824813689-53b9f4e2f9d6?auto=format&fit=crop&q=80&w=400',
+      image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400',
       specialty: 'Critical Care & ICU Consultant'
     },
     {

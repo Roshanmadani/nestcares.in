@@ -254,14 +254,14 @@ const FoundersPanel = ({ homepage, onSaved }) => {
   );
 };
 
-const ContentSection = ({ settings, onSettingsSaved, onPublicChange }) => {
+const ContentSection = ({ settings, settingsLoaded, onSettingsSaved, onPublicChange }) => {
   const [tab, setTab] = useState('faqs');
   const current = TABS.find(t => t.id === tab);
 
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg sm:text-xl font-black text-slate-950 tracking-tight">Website content</h2>
+        <h2 className="max-lg:sr-only text-lg sm:text-xl font-black text-slate-950 tracking-tight">Website content</h2>
         <p className="text-[13px] text-slate-500">{current.desc}</p>
       </div>
       <div className="inline-flex p-1 rounded-xl bg-slate-100 w-full sm:w-auto">
@@ -279,7 +279,9 @@ const ContentSection = ({ settings, onSettingsSaved, onPublicChange }) => {
       </div>
       {tab === 'faqs' && <FaqsPanel onPublicChange={onPublicChange} />}
       {tab === 'testimonials' && <TestimonialsPanel />}
-      {tab === 'founders' && <FoundersPanel key={JSON.stringify(settings?.homepage?.founders || [])} homepage={settings?.homepage} onSaved={onSettingsSaved} />}
+      {tab === 'founders' && (settingsLoaded
+        ? <FoundersPanel homepage={settings?.homepage} onSaved={onSettingsSaved} />
+        : <div className="h-64 rounded-2xl bg-slate-100 animate-pulse" />)}
     </div>
   );
 };

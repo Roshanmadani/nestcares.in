@@ -111,7 +111,6 @@ const AppContent = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#fafafb] text-slate-800 font-sans select-none relative overflow-hidden">
         {/* Ambient background glow */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-teal-500/10 blur-[120px] rounded-full pointer-events-none" />
         
         {/* Pulsing Logo and Loader */}
         <div className="relative flex flex-col items-center justify-center gap-4 z-10">

@@ -87,7 +87,7 @@ const Contact = ({ contactSettings }) => {
               <PhoneCall className="w-5 h-5" />
             </div>
             <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Emergency Hotline</div>
-            <a href={`tel:${emergency.replace(/\D/g, '')}`} className="text-lg font-black text-slate-900 hover:text-teal-700 transition-colors block">
+            <a href={`tel:${emergency.replace(/\D/g, '')}`} className="text-lg font-black text-slate-900 hover:text-teal-700 transition-colors flex items-center min-h-11">
               {emergency}
             </a>
             <p className="text-xs text-slate-600">24/7 Standby ambulance & ICU dispatch.</p>
@@ -102,7 +102,7 @@ const Contact = ({ contactSettings }) => {
               href={`https://wa.me/${cleanWhatsappNumber}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-lg font-black text-emerald-600 hover:text-emerald-700 transition-colors block"
+              className="text-lg font-black text-emerald-600 hover:text-emerald-700 transition-colors flex items-center min-h-11"
             >
               {whatsapp}
             </a>

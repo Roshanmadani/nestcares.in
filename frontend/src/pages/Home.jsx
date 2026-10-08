@@ -1,6 +1,6 @@
-﻿import React, { useState, useRef } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, MotionConfig } from 'framer-motion';
+import { motion, MotionConfig, animate, useInView, useReducedMotion } from 'framer-motion';
 import {
   ShieldCheck, HeartPulse, Clock,
   ArrowRight, CheckCircle2, Star, Activity, Stethoscope,
@@ -179,6 +179,54 @@ const Reveal = ({ children, delay = 0, className = '' }) => (
   </motion.div>
 );
 
+// Headline words rise in one after another
+const AnimatedWords = ({ text, delay = 0, className = '', style }) => (
+  <span className={className} style={style}>
+    {text.split(' ').map((word, i) => (
+      <span key={i} className="inline-block overflow-hidden align-bottom pb-[0.08em] -mb-[0.08em]">
+        <motion.span
+          className="inline-block"
+          initial={{ y: '110%' }}
+          animate={{ y: 0 }}
+          transition={{ duration: 0.9, ease: EASE_OUT, delay: delay + i * 0.07 }}
+        >
+          {word}{' '}
+        </motion.span>
+      </span>
+    ))}
+  </span>
+);
+
+// Counts from 0 to `to` the first time it scrolls into view
+const CountUp = ({ to, suffix = '', duration = 1.6 }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-20px' });
+  const reduce = useReducedMotion();
+  const [value, setValue] = useState(reduce ? to : 0);
+
+  useEffect(() => {
+    if (!inView || reduce) return;
+    const controls = animate(0, to, {
+      duration,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate: (v) => setValue(Math.round(v)),
+    });
+    return () => controls.stop();
+  }, [inView, reduce, to, duration]);
+
+  return <span ref={ref} className="tabular-nums">{value}{suffix}</span>;
+};
+
+// Stagger for card rails: the rail triggers once, cards cascade in
+const RAIL_VARIANTS = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08 } },
+};
+const CARD_VARIANTS = {
+  hidden: { opacity: 0, y: 28, scale: 0.97 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.7, ease: EASE_OUT } },
+};
+
 const Eyebrow = ({ children, tone = 'light' }) => (
   <div className={`inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] ${tone === 'dark' ? 'text-emerald-300' : 'text-slate-500'}`}>
     <span className={`h-px w-6 ${tone === 'dark' ? 'bg-emerald-300/60' : 'bg-slate-400/70'}`} />
@@ -224,13 +272,17 @@ const SnapRail = ({ children, className = '' }) => {
 
   return (
     <>
-      <div
+      <motion.div
         ref={railRef}
         onScroll={handleScroll}
-        className={`flex md:grid gap-4 sm:gap-5 overflow-x-auto md:overflow-visible snap-x snap-mandatory scroll-px-4 -mx-4 px-4 md:mx-0 md:px-0 pb-2 scrollbar-none ${className}`}
+        variants={RAIL_VARIANTS}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.15 }}
+        className={`flex md:grid gap-4 sm:gap-5 overflow-x-auto md:overflow-visible snap-x snap-mandatory scroll-px-4 -mx-4 px-4 md:mx-0 md:px-0 pt-1 pb-3 scrollbar-none ${className}`}
       >
         {children}
-      </div>
+      </motion.div>
       <div className="md:hidden mt-4 mx-auto h-1 w-24 rounded-full bg-slate-900/10 overflow-hidden" aria-hidden="true">
         <div
           className="h-full w-1/3 rounded-full bg-slate-900 transition-transform duration-150"
@@ -277,18 +329,19 @@ const Home = ({
     <MotionConfig reducedMotion="user">
       <div className="min-h-screen text-slate-800 font-sans relative pb-10 sm:pb-16 overflow-x-clip">
 
-        {/* Ambient colour field — gives the glass something to refract */}
-        <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
-          <div className="absolute inset-0 bg-[#f6f7f9]" />
-          <div className="absolute -top-32 -left-24 w-[34rem] h-[34rem] rounded-full bg-[radial-gradient(closest-side,rgba(16,185,129,0.20),transparent)]" />
-          <div className="absolute top-[18%] -right-40 w-[38rem] h-[38rem] rounded-full bg-[radial-gradient(closest-side,rgba(56,189,248,0.18),transparent)]" />
-          <div className="absolute bottom-[-12rem] left-[10%] w-[40rem] h-[40rem] rounded-full bg-[radial-gradient(closest-side,rgba(244,114,182,0.12),transparent)]" />
-        </div>
-
         {/* ========================================================
-            1. HERO
+            1. HERO (with horizon glow)
         ======================================================== */}
-        <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-4 sm:pt-10 lg:pt-14 pb-12 sm:pb-20">
+        <section className="relative overflow-hidden -mt-20 sm:-mt-24 pt-20 sm:pt-24">
+          <motion.div
+            aria-hidden="true"
+            className="horizon"
+            style={{ '--horizon-rise': '120px' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1.6, ease: EASE_OUT, delay: 0.3 }}
+          />
+          <div className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-4 sm:pt-10 lg:pt-14 pb-[130px] sm:pb-[180px]">
           <div className="max-w-4xl">
 
             <div className="text-left">
@@ -305,17 +358,15 @@ const Home = ({
                 <span><span className="font-extrabold text-slate-950">Live in Nizamabad</span> · 15-min response</span>
               </motion.div>
 
-              <motion.h1
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: EASE_OUT, delay: 0.05 }}
-                className="mt-5 sm:mt-7 text-[2.65rem] leading-[1.02] sm:text-6xl lg:text-[4.6rem] font-black text-slate-950 tracking-[-0.04em]"
-              >
-                Hospital-grade care,{' '}
-                <span className="block italic font-normal tracking-[-0.02em] text-slate-700" style={{ fontFamily: "'Playfair Display', serif" }}>
-                  right at home.
-                </span>
-              </motion.h1>
+              <h1 className="mt-5 sm:mt-7 text-[2.65rem] leading-[1.05] sm:text-6xl lg:text-[4.6rem] font-black text-slate-950 tracking-[-0.04em]">
+                <AnimatedWords text="Hospital-grade care," delay={0.05} />
+                <AnimatedWords
+                  text="right at home."
+                  delay={0.3}
+                  className="block italic font-normal tracking-[-0.02em] text-slate-700"
+                  style={{ fontFamily: "'Playfair Display', serif" }}
+                />
+              </h1>
 
               <motion.p
                 initial={{ opacity: 0, y: 16 }}
@@ -392,9 +443,9 @@ const Home = ({
                 className="liquid-glass mt-9 sm:mt-12 rounded-[1.5rem] grid grid-cols-3 divide-x divide-slate-900/[0.07] py-4 sm:py-5 max-w-2xl"
               >
                 {[
-                  { value: '15 min', label: 'Dispatch' },
-                  { value: '10k+', label: 'Patients' },
-                  { value: '24/7', label: 'Standby' }
+                  { value: <CountUp to={15} suffix=" min" />, label: 'Dispatch' },
+                  { value: <CountUp to={10} suffix="k+" />, label: 'Patients' },
+                  { value: <><CountUp to={24} duration={1.2} />/7</>, label: 'Standby' }
                 ].map(s => (
                   <div key={s.label} className="px-2 text-center">
                     <div className="text-xl sm:text-3xl font-black tracking-tight leading-none text-slate-950">{s.value}</div>
@@ -405,12 +456,13 @@ const Home = ({
             </div>
 
           </div>
+          </div>
         </section>
 
         {/* ========================================================
             2. SERVICES
         ======================================================== */}
-        <section className="py-10 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-left">
+        <section className="pt-2 pb-10 sm:pt-6 sm:pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-left">
           <Reveal>
             <SectionHeader
               eyebrow="Specialized Medical Services"
@@ -424,11 +476,13 @@ const Home = ({
             {LUXURY_SERVICES.map((serv) => {
               const Icon = serv.icon;
               return (
-                <button
+                <motion.button
                   type="button"
                   key={serv.id}
+                  variants={CARD_VARIANTS}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => handleBookService(serv.title)}
-                  className="snap-start shrink-0 w-[82%] sm:w-[58%] md:w-auto relative h-[440px] sm:h-[460px] rounded-[1.75rem] overflow-hidden text-left group shadow-[0_20px_40px_-20px_rgba(15,23,42,0.4)] active:scale-[0.99] transition-transform"
+                  className="snap-start shrink-0 w-[82%] sm:w-[58%] md:w-auto relative h-[440px] sm:h-[460px] rounded-[1.75rem] overflow-hidden text-left group shadow-[0_20px_40px_-20px_rgba(15,23,42,0.4)]"
                   aria-label={`Book ${serv.title}`}
                 >
                   <img
@@ -469,7 +523,7 @@ const Home = ({
                       </span>
                     </div>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
           </SnapRail>
@@ -481,8 +535,6 @@ const Home = ({
         <section className="py-6 sm:py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <Reveal>
             <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-rose-600 via-rose-600 to-red-700 text-white p-6 sm:p-10 shadow-[0_30px_60px_-25px_rgba(225,29,72,0.6)]">
-              <div aria-hidden="true" className="absolute -top-24 -right-16 h-72 w-72 rounded-full bg-white/15 blur-2xl" />
-              <div aria-hidden="true" className="absolute -bottom-28 left-10 h-64 w-64 rounded-full bg-orange-300/25 blur-3xl" />
 
               <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-3 max-w-2xl">
@@ -528,8 +580,9 @@ const Home = ({
 
           <SnapRail className="md:grid-cols-3">
             {displayDoctors.map((doc) => (
-              <div
+              <motion.div
                 key={doc._id || doc.name}
+                variants={CARD_VARIANTS}
                 className="liquid-glass snap-start shrink-0 w-[85%] sm:w-[60%] md:w-auto rounded-[1.75rem] p-5 sm:p-6 flex flex-col justify-between"
               >
                 <div>
@@ -575,7 +628,7 @@ const Home = ({
                   <span>Book home visit</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
-              </div>
+              </motion.div>
             ))}
           </SnapRail>
         </section>
@@ -616,8 +669,6 @@ const Home = ({
         <section className="py-10 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-left">
           <Reveal>
             <div className="relative overflow-hidden rounded-[2rem] bg-[#0a0a0c] text-white p-6 sm:p-12 shadow-[0_40px_80px_-30px_rgba(2,6,23,0.7)]">
-              <div aria-hidden="true" className="absolute -top-32 -right-24 h-96 w-96 rounded-full bg-emerald-500/20 blur-3xl" />
-              <div aria-hidden="true" className="absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-sky-500/15 blur-3xl" />
 
               <div className="relative space-y-7">
                 <div className="space-y-3 max-w-3xl">
@@ -708,47 +759,44 @@ const Home = ({
         ======================================================== */}
         <section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
           <Reveal>
-            <div className="relative">
-              {/* Colour behind the glass */}
-              <div aria-hidden="true" className="absolute inset-0 overflow-hidden rounded-[2rem]">
-                <div className="absolute -top-10 left-[8%] h-56 w-56 rounded-full bg-emerald-400/45 blur-3xl" />
-                <div className="absolute -bottom-12 right-[6%] h-64 w-64 rounded-full bg-sky-400/40 blur-3xl" />
-                <div className="absolute top-1/3 left-1/2 h-40 w-40 rounded-full bg-fuchsia-300/30 blur-3xl" />
-              </div>
-
-              <div className="liquid-glass relative rounded-[2rem] px-6 py-10 sm:p-14 text-center">
-                <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-600">
+            <div className="relative overflow-hidden rounded-[2rem] bg-[#0a0a0c] text-white px-6 pt-10 pb-24 sm:px-14 sm:pt-14 sm:pb-28 text-center shadow-[0_40px_80px_-30px_rgba(2,6,23,0.6)]">
+              <div aria-hidden="true" className="horizon horizon-dark" style={{ '--horizon-rise': '64px', width: 'max(160%, 720px)' }} />
+              <div className="relative">
+                <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
                   <span className="relative flex h-2 w-2">
-                    <span className="anim-live-pulse absolute inset-0 rounded-full bg-emerald-500" />
-                    <span className="relative h-2 w-2 rounded-full bg-emerald-500" />
+                    <span className="anim-live-pulse absolute inset-0 rounded-full bg-emerald-400" />
+                    <span className="relative h-2 w-2 rounded-full bg-emerald-400" />
                   </span>
                   24/7 clinical standby
                 </span>
-                <h3 className="mt-4 text-[1.9rem] sm:text-5xl font-black text-slate-950 tracking-[-0.035em] leading-[1.05]">
+                <h3 className="mt-4 text-[1.9rem] sm:text-5xl font-black text-white tracking-[-0.035em] leading-[1.05]">
                   Need medical help{' '}
-                  <span className="italic font-normal" style={{ fontFamily: "'Playfair Display', serif" }}>right now?</span>
+                  <span className="italic font-normal text-white/80" style={{ fontFamily: "'Playfair Display', serif" }}>right now?</span>
                 </h3>
-                <p className="mt-4 text-slate-600 text-[15px] sm:text-base max-w-lg mx-auto leading-relaxed">
+                <p className="mt-4 text-slate-300 text-[15px] sm:text-base max-w-lg mx-auto leading-relaxed">
                   Submit your care request online or speak with our clinical coordinator directly on WhatsApp.
                 </p>
 
                 <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 max-w-md mx-auto">
-                  <Link
-                    to="/book"
-                    className="btn-liquid-ink h-14 px-7 rounded-full flex items-center justify-center gap-2 text-[15px] font-bold active:scale-[0.98] transition-transform"
-                  >
-                    <HeartPulse className="w-5 h-5 text-rose-300" />
-                    <span>Book care now</span>
-                  </Link>
-                  <a
+                  <motion.div whileTap={{ scale: 0.97 }}>
+                    <Link
+                      to="/book"
+                      className="h-14 px-7 rounded-full flex items-center justify-center gap-2 text-[15px] font-bold bg-white text-slate-950 shadow-[inset_0_-2px_0_rgba(0,0,0,0.06)]"
+                    >
+                      <HeartPulse className="w-5 h-5 text-rose-500" />
+                      <span>Book care now</span>
+                    </Link>
+                  </motion.div>
+                  <motion.a
+                    whileTap={{ scale: 0.97 }}
                     href={`https://wa.me/${cleanWhatsapp}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="h-14 px-7 rounded-full flex items-center justify-center gap-2 text-[15px] font-bold text-white bg-gradient-to-b from-emerald-500 to-emerald-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_10px_24px_-8px_rgba(5,150,105,0.6)] active:scale-[0.98] transition-transform"
+                    className="h-14 px-7 rounded-full flex items-center justify-center gap-2 text-[15px] font-bold text-white bg-gradient-to-b from-emerald-500 to-emerald-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_10px_24px_-8px_rgba(5,150,105,0.6)]"
                   >
                     <MessageSquare className="w-5 h-5" />
                     <span>Chat on WhatsApp</span>
-                  </a>
+                  </motion.a>
                 </div>
               </div>
             </div>

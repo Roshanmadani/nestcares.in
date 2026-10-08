@@ -45,11 +45,12 @@ const Dashboard = ({ refreshPublicData }) => {
   const [services, setServices] = useState([]);
   const [servicesLoading, setServicesLoading] = useState(true);
   const [settings, setSettings] = useState({});
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [editingFullPage, setEditingFullPage] = useState(false);
 
-  const loadBookings = useCallback(async () => {
-    setBookingsLoading(true);
+  const loadBookings = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setBookingsLoading(true);
     try {
       const res = await bookingsAPI.getBookings();
       if (res.success) setBookings(res.data || []);
@@ -88,6 +89,8 @@ const Dashboard = ({ refreshPublicData }) => {
       if (res.success) setSettings(res.data || {});
     } catch (err) {
       console.error('[Admin] settings', err);
+    } finally {
+      setSettingsLoaded(true);
     }
   }, []);
 
@@ -103,7 +106,7 @@ const Dashboard = ({ refreshPublicData }) => {
   useEffect(() => {
     if (!token) return;
     const id = setInterval(() => {
-      if (document.visibilityState === 'visible') loadBookings();
+      if (document.visibilityState === 'visible') loadBookings({ silent: true });
     }, POLL_MS);
     return () => clearInterval(id);
   }, [token, loadBookings]);
@@ -116,7 +119,7 @@ const Dashboard = ({ refreshPublicData }) => {
     setParams(next);
     setMoreOpen(false);
     setEditingFullPage(false);
-    window.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   const openBooking = (id) => {
@@ -146,10 +149,11 @@ const Dashboard = ({ refreshPublicData }) => {
   const current = NAV.find(n => n.id === tab);
   const initials = (user?.name || 'A').split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
 
-  const NavButton = ({ item }) => {
+  const renderNavButton = (item) => {
     const active = tab === item.id;
     return (
       <button
+        key={item.id}
         type="button"
         onClick={() => go(item.id)}
         className={cx(
@@ -180,7 +184,7 @@ const Dashboard = ({ refreshPublicData }) => {
           </div>
         </div>
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {NAV.map(item => <NavButton key={item.id} item={item} />)}
+          {NAV.map(renderNavButton)}
         </nav>
         <div className="p-3 border-t border-white/10 space-y-1">
           <Link to="/" target="_blank" className="h-10 px-3 rounded-xl flex items-center gap-3 text-sm font-semibold text-slate-400 hover:text-white hover:bg-white/5">
@@ -223,6 +227,7 @@ const Dashboard = ({ refreshPublicData }) => {
         </header>
 
         <main className={cx('px-4 sm:px-6 lg:px-10 py-5 lg:py-8 max-w-6xl mx-auto', editingFullPage ? 'pb-8' : 'pb-28 lg:pb-10')}>
+          <div key={tab} className="admin-section-in">
           {tab === 'overview' && (
             <OverviewSection
               user={user}
@@ -239,7 +244,7 @@ const Dashboard = ({ refreshPublicData }) => {
               key={statusParam}
               bookings={bookings}
               loading={bookingsLoading}
-              onRefresh={loadBookings}
+              onRefresh={() => loadBookings()}
               onBookingChanged={handleBookingChanged}
               services={services}
               initialStatus={statusParam}
@@ -259,11 +264,12 @@ const Dashboard = ({ refreshPublicData }) => {
             />
           )}
           {tab === 'content' && (
-            <ContentSection settings={settings} onSettingsSaved={() => { loadSettings(); publicChanged(); }} onPublicChange={publicChanged} />
+            <ContentSection settings={settings} settingsLoaded={settingsLoaded} onSettingsSaved={() => { loadSettings(); publicChanged(); }} onPublicChange={publicChanged} />
           )}
           {tab === 'settings' && (
-            <SettingsSection settings={settings} onSettingsSaved={() => { loadSettings(); publicChanged(); }} />
+            <SettingsSection settings={settings} settingsLoaded={settingsLoaded} onSettingsSaved={() => { loadSettings(); publicChanged(); }} />
           )}
+          </div>
         </main>
       </div>
 

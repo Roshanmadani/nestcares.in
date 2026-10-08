@@ -142,7 +142,7 @@ const SEED_SERVICES = [
     shortDescription: 'Diagnostic blood tests and sample collection from your home.',
     fullDescription: 'Get accurate medical diagnostics without leaving your house. Our certified phlebotomists visit your home for sample collection.',
     bannerImage: '',
-    galleryImages: ['https://images.unsplash.com/photo-1579154204601-01588f351167?auto=format&fit=crop&q=80&w=400'],
+    galleryImages: ['https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&q=80&w=400'],
     benefits: [
       'Hassle-free, hygienic home sample collection',
       'NABL-accredited diagnostic accuracy',
@@ -150,10 +150,10 @@ const SEED_SERVICES = [
       'Wide panel of tests (Thyroid, CBC, Diabetes, Lipid, etc.)'
     ],
     subServices: [
-      { name: 'Home Blood Sample Collection', description: 'Certified phlebotomist visit for collecting blood samples aseptic vials.', price: 200, bookable: true, active: true, image: 'https://images.unsplash.com/photo-1579154204601-01588f351167?auto=format&fit=crop&q=80&w=400' },
-      { name: 'Blood Tests', description: 'Complete Blood Count (CBC), Sugar Fasting, Liver (LFT), and Kidney Panels (KFT).', price: 800, bookable: true, active: true, image: 'https://images.unsplash.com/photo-1579154204601-01588f351167?auto=format&fit=crop&q=80&w=400' },
-      { name: 'Urine Sample Collection', description: 'Container collection and lab transfer for urine analysis.', price: 300, bookable: true, active: true, image: 'https://images.unsplash.com/photo-1579154204601-01588f351167?auto=format&fit=crop&q=80&w=400' },
-      { name: 'Diagnostic Sample Collection', description: 'Specialized diagnostic collections (swabs, skin scrapes) for cultures.', price: 500, bookable: true, active: true, image: 'https://images.unsplash.com/photo-1579154204601-01588f351167?auto=format&fit=crop&q=80&w=400' }
+      { name: 'Home Blood Sample Collection', description: 'Certified phlebotomist visit for collecting blood samples aseptic vials.', price: 200, bookable: true, active: true, image: 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&q=80&w=400' },
+      { name: 'Blood Tests', description: 'Complete Blood Count (CBC), Sugar Fasting, Liver (LFT), and Kidney Panels (KFT).', price: 800, bookable: true, active: true, image: 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&q=80&w=400' },
+      { name: 'Urine Sample Collection', description: 'Container collection and lab transfer for urine analysis.', price: 300, bookable: true, active: true, image: 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&q=80&w=400' },
+      { name: 'Diagnostic Sample Collection', description: 'Specialized diagnostic collections (swabs, skin scrapes) for cultures.', price: 500, bookable: true, active: true, image: 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&q=80&w=400' }
     ],
     faqs: [
       { question: 'When do I get my test reports?', answer: 'Digital reports are emailed/messaged in 12 to 24 hours depending on the complexity of the test panel.' }
