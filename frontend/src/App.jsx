@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import LaunchCeremony from './components/LaunchCeremony';
 import { mockDb } from './utils/mockDb';
 import { settingsAPI, servicesAPI, testimonialsAPI, faqsAPI, apiClient } from './services/api';
 
@@ -28,6 +29,17 @@ import { ToastProvider } from './components/common/ToastContext';
 
 const AppContent = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  // Launch ceremony: www.nestcares.in/launch or www.nestcares.in/?launch
+  const [showLaunch, setShowLaunch] = useState(
+    () => location.pathname === '/launch' || new URLSearchParams(location.search).has('launch')
+  );
+  const finishLaunch = () => {
+    setShowLaunch(false);
+    navigate('/', { replace: true });
+    document.title = 'Nest Cares | #1 Home Healthcare & Nursing Services in Nizamabad';
+    window.scrollTo(0, 0);
+  };
   
   // Public Config & Content States - Pre-load from local mock cache for instant rendering
   const [services, setServices] = useState(mockDb.getServices(false));
@@ -107,6 +119,14 @@ const AppContent = () => {
     }
   }, [settings]);
 
+  if (showLaunch) {
+    return (
+      <AnimatePresence>
+        <LaunchCeremony key="launch" onDone={finishLaunch} />
+      </AnimatePresence>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#fafafb] text-slate-800 font-sans select-none relative overflow-hidden">
@@ -179,6 +199,7 @@ const AppContent = () => {
           
           {/* Admin Authentication */}
           <Route path="/login" element={<Login />} />
+          <Route path="/launch" element={null} />
           
           {/* Doctor Portal */}
           <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
