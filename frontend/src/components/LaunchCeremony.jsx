@@ -57,7 +57,7 @@ const LaunchCeremony = ({ onDone }) => {
 
       {/* Blessing, shown throughout */}
       <motion.div
-        className="absolute top-6 sm:top-10 left-0 right-0 text-center text-[13px] sm:text-base font-bold tracking-[0.3em] uppercase text-amber-300"
+        className="absolute top-6 sm:top-10 md:top-14 left-0 right-0 text-center text-[13px] sm:text-base md:text-xl font-bold tracking-[0.3em] uppercase text-amber-300"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
@@ -76,31 +76,34 @@ const LaunchCeremony = ({ onDone }) => {
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl bg-white p-3 shadow-[0_0_60px_rgba(52,211,153,0.35)]">
+            {/* On short screens (iPad landscape with Safari bars) shrink the whole block */}
+            <div className="flex flex-col items-center origin-center [@media(max-height:900px)]:scale-[0.8] [@media(max-height:720px)]:scale-[0.68] [@media(max-height:900px)]:mt-6">
+            <div className="h-20 w-20 sm:h-24 sm:w-24 md:h-32 md:w-32 rounded-3xl bg-white p-3 shadow-[0_0_60px_rgba(52,211,153,0.35)]">
               <img src="/logo.png" alt="Nest Cares" className="h-full w-full object-contain" />
             </div>
-            <div className="mt-6 text-[12px] sm:text-sm font-bold uppercase tracking-[0.35em] text-emerald-300">Grand Launch</div>
-            <h1 className="mt-3 text-5xl sm:text-7xl font-black tracking-tight !text-white">Nest Cares</h1>
-            <p className="mt-3 text-base sm:text-xl text-white/70">Hospital-grade care, right at home · Nizamabad</p>
+            <div className="mt-6 text-[12px] sm:text-sm md:text-lg font-bold uppercase tracking-[0.35em] text-emerald-300">Grand Launch</div>
+            <h1 className="mt-3 text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tight !text-white">Nest Cares</h1>
+            <p className="mt-3 text-base sm:text-xl md:text-2xl text-white/70">Hospital-grade care, right at home · Nizamabad</p>
 
             <motion.button
               type="button"
               onClick={() => setStage('countdown')}
               whileTap={{ scale: 0.94 }}
-              className="relative mt-12 h-36 w-36 sm:h-44 sm:w-44 rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600 text-white font-black text-xl sm:text-2xl flex flex-col items-center justify-center gap-1 shadow-[0_0_0_10px_rgba(52,211,153,0.15),0_20px_60px_rgba(16,185,129,0.6)] cursor-pointer"
+              className="relative mt-12 md:mt-16 h-36 w-36 sm:h-44 sm:w-44 md:h-56 md:w-56 rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600 text-white font-black text-xl sm:text-2xl md:text-3xl flex flex-col items-center justify-center gap-1 shadow-[0_0_0_10px_rgba(52,211,153,0.15),0_20px_60px_rgba(16,185,129,0.6)] cursor-pointer"
             >
               <span className="absolute inset-0 rounded-full border-2 border-emerald-300 anim-live-pulse" />
-              <Rocket className="w-8 h-8 sm:w-10 sm:h-10" />
+              <Rocket className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" />
               LAUNCH
             </motion.button>
-            <p className="mt-6 text-sm text-white/50">Tap to launch www.nestcares.in</p>
+            <p className="mt-6 text-sm md:text-lg text-white/50">Tap to launch www.nestcares.in</p>
+            </div>
           </motion.div>
         )}
 
         {stage === 'countdown' && count > 0 && (
           <motion.div
             key={`c${count}`}
-            className="relative text-[11rem] sm:text-[16rem] font-black leading-none text-emerald-300"
+            className="relative text-[11rem] sm:text-[16rem] md:text-[22rem] font-black leading-none text-emerald-300"
             initial={{ opacity: 0, scale: 2.2 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.4 }}
@@ -143,9 +146,9 @@ const LaunchCeremony = ({ onDone }) => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div className="text-[12px] sm:text-sm font-bold uppercase tracking-[0.35em] text-emerald-300">We are live</div>
-              <h2 className="mt-3 text-5xl sm:text-7xl font-black tracking-tight !text-white">Welcome to<br />Nest Cares</h2>
-              <p className="mt-4 text-base sm:text-xl text-white/70">www.nestcares.in</p>
+              <div className="text-[12px] sm:text-sm md:text-lg font-bold uppercase tracking-[0.35em] text-emerald-300">We are live</div>
+              <h2 className="mt-3 text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tight !text-white">Welcome to<br />Nest Cares</h2>
+              <p className="mt-4 text-base sm:text-xl md:text-3xl text-white/70">www.nestcares.in</p>
             </motion.div>
           </motion.div>
         )}
