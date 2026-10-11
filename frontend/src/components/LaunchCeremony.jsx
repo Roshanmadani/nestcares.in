@@ -55,6 +55,17 @@ const LaunchCeremony = ({ onDone }) => {
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
       />
 
+      {/* Blessing, shown throughout */}
+      <motion.div
+        className="absolute top-6 sm:top-10 left-0 right-0 text-center text-[13px] sm:text-base font-bold tracking-[0.3em] uppercase text-amber-300"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        style={{ textShadow: '0 0 18px rgba(251,191,36,0.45)' }}
+      >
+        🙏 Jai Bhavani 🙏
+      </motion.div>
+
       <AnimatePresence mode="wait">
         {stage === 'ready' && (
           <motion.div
@@ -69,7 +80,7 @@ const LaunchCeremony = ({ onDone }) => {
               <img src="/logo.png" alt="Nest Cares" className="h-full w-full object-contain" />
             </div>
             <div className="mt-6 text-[12px] sm:text-sm font-bold uppercase tracking-[0.35em] text-emerald-300">Grand Launch</div>
-            <h1 className="mt-3 text-5xl sm:text-7xl font-black tracking-tight">Nest Cares</h1>
+            <h1 className="mt-3 text-5xl sm:text-7xl font-black tracking-tight !text-white">Nest Cares</h1>
             <p className="mt-3 text-base sm:text-xl text-white/70">Hospital-grade care, right at home · Nizamabad</p>
 
             <motion.button
@@ -133,7 +144,7 @@ const LaunchCeremony = ({ onDone }) => {
               transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="text-[12px] sm:text-sm font-bold uppercase tracking-[0.35em] text-emerald-300">We are live</div>
-              <h2 className="mt-3 text-5xl sm:text-7xl font-black tracking-tight">Welcome to<br />Nest Cares</h2>
+              <h2 className="mt-3 text-5xl sm:text-7xl font-black tracking-tight !text-white">Welcome to<br />Nest Cares</h2>
               <p className="mt-4 text-base sm:text-xl text-white/70">www.nestcares.in</p>
             </motion.div>
           </motion.div>
