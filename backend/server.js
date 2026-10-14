@@ -53,7 +53,15 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     dbConnected: global.dbConnected || false,
     // Why the database isn't connected (credentials removed), to diagnose deployments
-    dbError: global.dbConnected ? undefined : (global.dbLastError || 'Not connected yet')
+    dbError: global.dbConnected ? undefined : (global.dbLastError || 'Not connected yet'),
+    // Which cluster the server is configured for — host only, never credentials
+    dbTarget: (() => {
+      const uri = process.env.MONGODB_URI || '';
+      if (!uri) return 'MONGODB_URI is not set';
+      const m = uri.match(/@([^/?]+)/);
+      const db = (uri.match(/@[^/]+\/([^?]*)/) || [])[1];
+      return `${m ? m[1] : 'no @ found in value'} | db: ${db || '(none)'} | starts: ${uri.slice(0, 14)} | length: ${uri.length}`;
+    })()
   });
 });
 
