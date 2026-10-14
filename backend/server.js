@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const dotenv = require('dotenv');
-const { connectDB } = require('./config/db');
+const { ensureConnected } = require('./config/db');
 
 // Load environment variables
 dotenv.config();
@@ -20,9 +20,19 @@ app.use(express.urlencoded({ extended: true }));
 // Serve uploaded images statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Connect to Database
-connectDB().then(() => {
+// Connect to Database: start at boot, and make every API request wait for the
+// connection (required on Vercel, which freezes the process between requests)
+ensureConnected().then(() => {
   console.log('Database initialization check complete.');
+});
+app.use('/api', async (req, res, next) => {
+  if (req.path === '/health/probe') return next();
+  try {
+    await ensureConnected();
+  } catch (err) {
+    console.error('Database connection wait failed:', err.message);
+  }
+  next();
 });
 
 // Import route groups

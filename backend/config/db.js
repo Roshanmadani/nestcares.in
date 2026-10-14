@@ -39,4 +39,28 @@ const connectDB = async () => {
   }
 };
 
-module.exports = { connectDB, isConnected: () => isConnected };
+// Serverless platforms (Vercel) freeze the process as soon as a response is
+// sent, so a connection started at boot never finishes in the background.
+// Every request awaits this instead: it reuses a live connection, joins an
+// attempt in progress, or starts a new one (retrying at most every 10s).
+let pending = null;
+let lastFailureAt = 0;
+const RETRY_AFTER_MS = 10000;
+
+const ensureConnected = async () => {
+  if (mongoose.connection.readyState === 1) {
+    global.dbConnected = true;
+    return true;
+  }
+  if (!pending) {
+    if (lastFailureAt && Date.now() - lastFailureAt < RETRY_AFTER_MS) return false;
+    pending = connectDB().finally(() => {
+      if (!global.dbConnected) lastFailureAt = Date.now();
+      pending = null;
+    });
+  }
+  await pending;
+  return !!global.dbConnected;
+};
+
+module.exports = { connectDB, ensureConnected, isConnected: () => isConnected };
