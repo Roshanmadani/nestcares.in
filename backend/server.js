@@ -45,6 +45,40 @@ app.use('/api/faqs', faqRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/upload', uploadRoutes);
 
+// Network probe: can this server reach the Atlas hosts at all? (no credentials used)
+app.get('/api/health/probe', async (req, res) => {
+  const dns = require('dns').promises;
+  const net = require('net');
+  const tls = require('tls');
+  const uri = process.env.MONGODB_URI || '';
+  const host = (uri.match(/@([^/?]+)/) || [])[1];
+  const out = { host, srv: null, tcp: [], tls: [] };
+  try {
+    const srv = await dns.resolveSrv(`_mongodb._tcp.${host}`);
+    out.srv = srv.map(s => `${s.name}:${s.port}`);
+    const attempt = (fn) => new Promise(resolve => {
+      const started = Date.now();
+      const done = (msg) => resolve(`${msg} (${Date.now() - started}ms)`);
+      try { fn(done); } catch (e) { done(`error ${e.message}`); }
+    });
+    for (const s of srv) {
+      out.tcp.push(`${s.name}: ` + await attempt(done => {
+        const c = net.connect({ host: s.name, port: s.port, timeout: 7000 }, () => { c.destroy(); done('ok'); });
+        c.on('timeout', () => { c.destroy(); done('timeout'); });
+        c.on('error', e => done(`error ${e.code || e.message}`));
+      }));
+      out.tls.push(`${s.name}: ` + await attempt(done => {
+        const c = tls.connect({ host: s.name, port: s.port, servername: s.name, timeout: 7000 }, () => { c.destroy(); done('ok'); });
+        c.on('timeout', () => { c.destroy(); done('timeout'); });
+        c.on('error', e => done(`error ${e.code || e.message}`));
+      }));
+    }
+  } catch (e) {
+    out.error = e.code || e.message;
+  }
+  res.json(out);
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
